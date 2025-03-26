@@ -1,6 +1,6 @@
 // backend/db/users.js
 const { Pool } = require("pg");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 dotenv.config();
 
