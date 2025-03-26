@@ -1,5 +1,5 @@
 // backend/db/users.js
-const pool = require("../db"); 
+const pool = require("../db");
 const bcrypt = require("bcryptjs");
 
 async function getUserByEmail(email) {

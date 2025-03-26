@@ -1,14 +1,10 @@
-import express from "express";
-import cors from "cors";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import pg from "pg";
-import dotenv from "dotenv";
+const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { Pool } = require("pg");
+const dotenv = require("dotenv");
 dotenv.config();
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const process = { env: require("dotenv").config().parsed };
-const { Pool } = pg;
 
 // Create Express app
 const app = express();
@@ -27,7 +23,7 @@ async function initDatabase() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -50,37 +46,33 @@ initDatabase();
 
 // Authentication Routes
 app.post("/api/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert user into database
     const result = await pool.query(
-      "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id",
-      [username, hashedPassword]
+      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
+      [email, hashedPassword]
     );
 
-    // Generate token
     const token = jwt.sign({ id: result.rows[0].id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.json({ token, username });
+    res.json({ token, email });
   } catch (err) {
-    res.status(400).json({ error: "Username already exists" });
+    res.status(400).json({ error: "Email already exists" });
   }
 });
 
 app.post("/api/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    // Find user
-    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
-      username,
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
     ]);
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -88,24 +80,21 @@ app.post("/api/login", async (req, res) => {
 
     const user = result.rows[0];
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Generate token
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.json({ token, username });
+    res.json({ token, email });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Middleware to verify JWT token
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -162,9 +151,8 @@ app.delete("/api/favorites/:symbol", authenticateToken, async (req, res) => {
   }
 });
 
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
+const authRoutes = require("./routes/auth");
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
