@@ -1,0 +1,12 @@
+backend/node_modules
+node_modules
+.dockerignore
+.git
+.gitignore
+Dockerfile
+Dockerfile.*
+.env
+*.log
+dist
+build
+.vscode

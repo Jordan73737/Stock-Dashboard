@@ -11,12 +11,9 @@ export const fetchFavorites = createAsyncThunk(
     try {
       const { auth } = getState();
       const response = await axios.get(`${API_URL}/favorites`, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
+        headers: { Authorization: `Bearer ${auth.token}` },
       });
 
-      // For each favorite, fetch current stock data
       const stockPromises = response.data.map(async (favorite) => {
         try {
           const stockResponse = await axios.get(
@@ -37,7 +34,6 @@ export const fetchFavorites = createAsyncThunk(
             highlight: false,
           };
         } catch (err) {
-          // Return stock with placeholder data if API fails
           return {
             id: favorite.id,
             symbol: favorite.symbol,
@@ -69,13 +65,8 @@ export const addFavorite = createAsyncThunk(
       await axios.post(
         `${API_URL}/favorites`,
         { symbol, name },
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${auth.token}` } }
       );
-
       return { symbol, name };
     } catch (error) {
       return rejectWithValue(
@@ -91,11 +82,8 @@ export const removeFavorite = createAsyncThunk(
     try {
       const { auth } = getState();
       await axios.delete(`${API_URL}/favorites/${symbol}`, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
+        headers: { Authorization: `Bearer ${auth.token}` },
       });
-
       return symbol;
     } catch (error) {
       return rejectWithValue(
@@ -104,6 +92,20 @@ export const removeFavorite = createAsyncThunk(
     }
   }
 );
+
+export const toggleFavorite = (symbol, name, isCurrentlyFavorite) => async (dispatch) => {
+  try {
+    console.log("Toggling favorite:", symbol, "Currently:", isCurrentlyFavorite);
+    if (isCurrentlyFavorite) {
+      await dispatch(removeFavorite(symbol)).unwrap();
+    } else {
+      await dispatch(addFavorite({ symbol, name })).unwrap();
+    }
+    dispatch(updateFavoriteStatus({ symbol, favorite: !isCurrentlyFavorite }));
+  } catch (error) {
+    console.error("Toggle favorite failed:", error);
+  }
+};
 
 const initialState = {
   stocks: [],
@@ -128,19 +130,27 @@ const stocksSlice = createSlice({
     },
     updateStockHighlight: (state, action) => {
       const { id, highlight } = action.payload;
-      const stockIndex = state.stocks.findIndex((stock) => stock.id === id);
-      if (stockIndex !== -1) {
-        state.stocks[stockIndex].highlight = highlight;
-      }
+      const stock = state.stocks.find((s) => s.id === id);
+      if (stock) stock.highlight = highlight;
     },
     updateStockPrice: (state, action) => {
       const { id, price, change, highlight } = action.payload;
-      const stockIndex = state.stocks.findIndex((stock) => stock.id === id);
-      if (stockIndex !== -1) {
-        state.stocks[stockIndex].price = price;
-        state.stocks[stockIndex].change = change;
-        state.stocks[stockIndex].highlight = highlight;
+      const stock = state.stocks.find((s) => s.id === id);
+      if (stock) {
+        stock.price = price;
+        stock.change = change;
+        stock.highlight = highlight;
       }
+    },
+    updateFavoriteStatus: (state, action) => {
+      const { symbol, favorite } = action.payload;
+      const stock = state.stocks.find((s) => s.symbol === symbol);
+      if (stock) {
+        stock.favorite = favorite;
+      }
+    },
+    setStocks: (state, action) => {
+      state.stocks = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -157,14 +167,13 @@ const stocksSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(addFavorite.fulfilled, (state, action) => {
-        // Note: We don't update the stocks array here
-        // as we'll refetch favorites to get complete data
+      .addCase(addFavorite.fulfilled, () => {
+        console.log("Successfully added to favorites");
       })
       .addCase(removeFavorite.fulfilled, (state, action) => {
-        state.stocks = state.stocks.filter(
-          (stock) => stock.symbol !== action.payload
-        );
+        console.log("Successfully removed from favorites:", action.payload);
+        const stock = state.stocks.find((s) => s.symbol === action.payload);
+        if (stock) stock.favorite = false;
       });
   },
 });
@@ -175,5 +184,8 @@ export const {
   clearSearchResults,
   updateStockHighlight,
   updateStockPrice,
+  updateFavoriteStatus,
+  setStocks,
 } = stocksSlice.actions;
+
 export default stocksSlice.reducer;

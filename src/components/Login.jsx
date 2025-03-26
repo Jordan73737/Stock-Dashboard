@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login, clearError } from "../slices/authSlice";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login({ username, password }));
+    dispatch(login({ email, password }));
   };
 
   return (
@@ -50,27 +50,34 @@ const Login = () => {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="username"
+              htmlFor="email"
             >
-              Username
+              Enter your email here
             </label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="username"
+              id="email"
               type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setemail(e.target.value)}
               required
             />
           </div>
           <div className="mb-6">
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="text-gray-700 text-sm font-bold mb-2"
               htmlFor="password"
             >
-              Password
+              Enter your password here
             </label>
+            <a
+              className="float-right mb-2 font-bold text-sm text-blue-600 hover:text-blue-800"
+              href="/recover"
+              data-discover="true"
+            >
+              Forgot your password?
+            </a>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="password"
