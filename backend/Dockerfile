@@ -1,18 +1,17 @@
-# Use Node.js base image
+# Use Node.js LTS version
 FROM node:18
 
-# Set working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy only the backend files
-COPY package*.json ./
+# Copy only backend files
 COPY . .
 
-# Install dependencies
+# Install backend dependencies
 RUN npm install
 
-# Expose the port your app runs on
+# Expose port used by Express
 EXPOSE 5000
 
-# Start the backend server
-CMD ["node", "backend/server.js"]
+# Run your backend app
+CMD ["node", "server.js"]
