@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../slices/authSlice";
 
 const Navbar = () => {
-  const { isAuthenticated, username } = useSelector((state) => state.auth);
+  const { isAuthenticated, email } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ const Navbar = () => {
         <div className="flex space-x-4 items-center">
           {isAuthenticated ? (
             <>
-              <span className="text-gray-600">Welcome, {username}</span>
+              <span className="text-gray-600">Welcome, {email}</span>
               <Link
                 to="/dashboard"
                 className="hover:text-blue-600 transition-colors"

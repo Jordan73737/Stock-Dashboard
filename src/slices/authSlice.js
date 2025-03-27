@@ -8,14 +8,14 @@ const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 export const login = createAsyncThunk(
   "auth/login",
-  async ({ username, password }, { rejectWithValue }) => {
+  async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/login`, {
-        username,
+        email,
         password,
       });
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("username", response.data.username);
+      localStorage.setItem("email", response.data.email);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.error);
@@ -25,14 +25,14 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
   "auth/register",
-  async ({ username, password }, { rejectWithValue }) => {
+  async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/register`, {
-        username,
+        email,
         password,
       });
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("username", response.data.username);
+      localStorage.setItem("email", response.data.email);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.error);
@@ -42,13 +42,13 @@ export const register = createAsyncThunk(
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("username");
+  localStorage.removeItem("email");
   return null;
 });
 
 const initialState = {
   token: localStorage.getItem("token"),
-  username: localStorage.getItem("username"),
+  email: localStorage.getItem("email"),
   isAuthenticated: !!localStorage.getItem("token"),
   loading: false,
   error: null,
@@ -72,7 +72,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.token = action.payload.token;
-        state.username = action.payload.username;
+        state.email = action.payload.email;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -86,7 +86,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.token = action.payload.token;
-        state.username = action.payload.username;
+        state.email = action.payload.email;
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -94,7 +94,7 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.token = null;
-        state.username = null;
+        state.email = null;
         state.isAuthenticated = false;
       });
   },
