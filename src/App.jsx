@@ -13,6 +13,8 @@ import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+import RecoverPassword from "./components/RecoverPassword";
+import ResetPassword from "./components/ResetPassword";
 
 // Redux actions
 import {
