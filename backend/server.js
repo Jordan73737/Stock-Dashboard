@@ -63,7 +63,7 @@ app.post("/api/register", async (req, res) => {
 
     res.json({ token, email });
   } catch (err) {
-    res.status(400).json({ error: "Email already exists" });
+    res.status(400).json({ error: err.message});
   }
 });
 
