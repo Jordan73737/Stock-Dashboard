@@ -50,6 +50,8 @@ function App() {
                 isAuthenticated ? <Dashboard /> : <Navigate to="/login" />
               }
             />
+            <Route path="/recover" element={<RecoverPassword />} />
+            <Route path="/reset/:token" element={<ResetPassword />} />
           </Routes>
         </main>
       </div>
