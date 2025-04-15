@@ -106,8 +106,9 @@ const Profile = () => {
       <h2 className="text-2xl font-bold mb-4">Your Profile</h2>
       <div className="mb-4">
         <p className="mb-2 font-medium">
-          Current Balance: ${balance.toFixed(2)}
+          Current Balance: ${Number(balance || 0).toFixed(2)}
         </p>
+
         <input
           type="number"
           value={inputBalance}
