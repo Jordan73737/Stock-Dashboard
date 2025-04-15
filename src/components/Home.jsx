@@ -21,22 +21,55 @@ const Home = () => {
   }, []);
 
   const handleBuy = async (stock) => {
-    const quantity = 1; // hardcoded for now
-    await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
-      {
-        symbol: stock.symbol,
-        name: stock.name,
-        quantity,
-        buy_price: parseFloat(stock.sell.replace("$", "")),
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+    const quantity = 1; // Hardcoded for now
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
+        {
+          symbol: stock.symbol,
+          name: stock.name,
+          quantity,
+          buy_price: parseFloat(stock.sell.replace("$", "")),
         },
-      }
-    );
-    alert("Bought!");
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // ✅ Trigger Navbar to refresh balance
+      window.dispatchEvent(new Event("balanceUpdated"));
+      alert("Bought!");
+    } catch (err) {
+      console.error("Buy failed:", err.response?.data?.error || err.message);
+      alert("Failed to buy.");
+    }
+  };
+
+  const handleSell = async (stock) => {
+    const quantity = 1;
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/sell`,
+        {
+          symbol: stock.symbol,
+          quantity,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // ✅ Trigger Navbar to refresh balance
+      window.dispatchEvent(new Event("balanceUpdated"));
+      alert("Sold!");
+    } catch (err) {
+      console.error("Sell failed:", err.response?.data?.error || err.message);
+      alert("Failed to sell. You might not own this stock.");
+    }
   };
 
   return (
@@ -65,7 +98,9 @@ const Home = () => {
                   className="bg-green-600 text-white px-2 py-1 rounded">
                   Buy
                 </button>
-                <button className="bg-red-600 text-white px-2 py-1 rounded">
+                <button
+                  onClick={() => handleSell(stock)}
+                  className="bg-red-600 text-white px-2 py-1 rounded">
                   Sell
                 </button>
               </td>
