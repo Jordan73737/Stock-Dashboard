@@ -178,6 +178,93 @@ app.use("/api/auth", authRoutes); // Mounts to /api/auth/forgot-password and /re
 
 // Run server on specified port or default to 5000
 const PORT = process.env.PORT || 5000;
+// Add this BEFORE app.listen
+app.get("/api/popular-stocks", async (req, res) => {
+  const axios = require("axios");
+
+  const symbols = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "TSLA",
+    "META",
+    "NVDA",
+    "BRK.B",
+    "JPM",
+    "V",
+  ];
+
+  try {
+    const results = await Promise.all(
+      symbols.map(async (symbol) => {
+        const quoteRes = await axios.get(
+          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_API_KEY}`
+        );
+        const profileRes = await axios.get(
+          `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${process.env.FINNHUB_API_KEY}`
+        );
+
+        return {
+          name: profileRes.data.name || symbol,
+          symbol,
+          change: quoteRes.data.dp.toFixed(2) + "%",
+          sell: `$${quoteRes.data.c}`,
+          buy: `$${(quoteRes.data.c + 1).toFixed(2)}`,
+        };
+      })
+    );
+
+    res.json(results);
+  } catch (err) {
+    console.error("Error fetching stocks from Finnhub:", err.message);
+    res.status(500).json({ error: "Failed to fetch stocks" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.get("/api/popular-stocks", async (req, res) => {
+  const axios = require("axios");
+
+  const symbols = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "TSLA",
+    "META",
+    "NVDA",
+    "BRK.B",
+    "JPM",
+    "V",
+  ];
+
+  try {
+    const results = await Promise.all(
+      symbols.map(async (symbol) => {
+        const quoteRes = await axios.get(
+          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_API_KEY}`
+        );
+        const profileRes = await axios.get(
+          `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${process.env.FINNHUB_API_KEY}`
+        );
+
+        return {
+          name: profileRes.data.name || symbol,
+          symbol,
+          change: quoteRes.data.dp.toFixed(2) + "%",
+          sell: `$${quoteRes.data.c}`,
+          buy: `$${(quoteRes.data.c + 1).toFixed(2)}`,
+        };
+      })
+    );
+
+    res.json(results);
+  } catch (err) {
+    console.error("Error fetching stocks from Finnhub:", err.message);
+    res.status(500).json({ error: "Failed to fetch stocks" });
+  }
 });
