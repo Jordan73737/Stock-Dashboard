@@ -78,16 +78,16 @@ const Home = () => {
       <table className="w-full text-sm border">
         <thead className="bg-gray-200">
           <tr>
-            <th className="py-2 px-4">Company</th>
-            <th className="py-2 px-4">Change %</th>
-            <th className="py-2 px-4">Sell</th>
-            <th className="py-2 px-4">Buy</th>
-            <th className="py-2 px-4">Actions</th>
+            <th className="py-2 px-4 text-center">Company</th>
+            <th className="py-2 px-4 text-center">Change %</th>
+            <th className="py-2 px-4 text-center">Sell</th>
+            <th className="py-2 px-4 text-center">Buy</th>
+            <th className="py-2 px-4 text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           {stocks.slice(0, visibleRows).map((stock, index) => (
-            <tr key={index} className="border-b">
+            <tr key={index} className="border-b text-center">
               <td className="py-2 px-4">{stock.name}</td>
               <td className="py-2 px-4">{stock.change}</td>
               <td className="py-2 px-4">{stock.sell}</td>
@@ -98,9 +98,7 @@ const Home = () => {
                   className="bg-green-600 text-white px-2 py-1 rounded">
                   Buy
                 </button>
-                <button
-                  onClick={() => handleSell(stock)}
-                  className="bg-red-600 text-white px-2 py-1 rounded">
+                <button className="bg-red-600 text-white px-2 py-1 rounded">
                   Sell
                 </button>
               </td>
