@@ -54,6 +54,7 @@ function App() {
                 isAuthenticated ? <Dashboard /> : <Navigate to="/login" />
               }
             />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/recover" element={<RecoverPassword />} />
             <Route path="/reset/:token" element={<ResetPassword />} />
           </Routes>

@@ -32,6 +32,11 @@ const Navbar = () => {
                 className="hover:text-blue-600 transition-colors">
                 Dashboard
               </Link>
+              <Link
+                to="/profile"
+                className="hover:text-blue-600 transition-colors">
+                Profile
+              </Link>
               <button
                 onClick={handleLogout}
                 className="hover:text-blue-600 transition-colors">
