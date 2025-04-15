@@ -17,6 +17,7 @@ import RecoverPassword from "./components/RecoverPassword";
 import ResetPassword from "./components/ResetPassword";
 import Home from "./components/Home";
 import Profile from "./components/Profile";
+import TradeSidebar from "./components/TradeSidebar";
 
 // Redux actions
 import {
