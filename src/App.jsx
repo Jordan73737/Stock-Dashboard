@@ -15,6 +15,7 @@ import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import RecoverPassword from "./components/RecoverPassword";
 import ResetPassword from "./components/ResetPassword";
+import Home from "./components/Home";
 
 // Redux actions
 import {
@@ -38,12 +39,13 @@ function App() {
               path="/"
               element={
                 isAuthenticated ? (
-                  <Navigate to="/dashboard" />
+                  <Navigate to="/home" />
                 ) : (
                   <Navigate to="/login" />
                 )
               }
             />
+            <Route path="/home" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route

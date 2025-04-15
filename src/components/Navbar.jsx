@@ -23,15 +23,18 @@ const Navbar = () => {
             <>
               <span className="text-gray-600">Welcome, {email}</span>
               <Link
+                to="/home"
+                className="hover:text-blue-600 transition-colors">
+                Home
+              </Link>
+              <Link
                 to="/dashboard"
-                className="hover:text-blue-600 transition-colors"
-              >
+                className="hover:text-blue-600 transition-colors">
                 Dashboard
               </Link>
               <button
                 onClick={handleLogout}
-                className="hover:text-blue-600 transition-colors"
-              >
+                className="hover:text-blue-600 transition-colors">
                 Logout
               </button>
             </>
@@ -39,14 +42,12 @@ const Navbar = () => {
             <>
               <Link
                 to="/login"
-                className="hover:text-blue-600 transition-colors"
-              >
+                className="hover:text-blue-600 transition-colors">
                 Login
               </Link>
               <Link
                 to="/register"
-                className="hover:text-blue-600 transition-colors"
-              >
+                className="hover:text-blue-600 transition-colors">
                 Register
               </Link>
             </>

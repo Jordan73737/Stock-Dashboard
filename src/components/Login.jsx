@@ -21,7 +21,7 @@ const Login = () => {
   useEffect(() => {
     // Redirect if authenticated
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/Home");
     }
   }, [isAuthenticated, navigate]);
 
@@ -40,8 +40,7 @@ const Login = () => {
         {error && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
-            role="alert"
-          >
+            role="alert">
             <p>{error}</p>
           </div>
         )}
@@ -50,8 +49,7 @@ const Login = () => {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="email"
-            >
+              htmlFor="email">
               Enter your email here
             </label>
             <input
@@ -67,15 +65,13 @@ const Login = () => {
           <div className="mb-6">
             <label
               className="text-gray-700 text-sm font-bold mb-2"
-              htmlFor="password"
-            >
+              htmlFor="password">
               Enter your password here
             </label>
             <a
               className="float-right mb-2 font-bold text-sm text-blue-600 hover:text-blue-800"
               href="/recover"
-              data-discover="true"
-            >
+              data-discover="true">
               Forgot your password?
             </a>
             <input
@@ -92,14 +88,12 @@ const Login = () => {
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors"
               type="submit"
-              disabled={loading}
-            >
+              disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </button>
             <Link
               to="/register"
-              className="inline-block align-baseline font-bold text-sm text-blue-600 hover:text-blue-800"
-            >
+              className="inline-block align-baseline font-bold text-sm text-blue-600 hover:text-blue-800">
               Create an account
             </Link>
           </div>
