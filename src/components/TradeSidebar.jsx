@@ -57,7 +57,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
       if (mode === "buy") {
         await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`,
           {
             symbol: stock.symbol,
             name: stock.name,
@@ -70,7 +70,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         );
       } else {
         await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/sell`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`,
           { symbol: stock.symbol, quantity },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -126,7 +126,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           <p>
             Your {mode === "buy" ? "Balance" : "Holdings"}:{" "}
             <strong>
-              {mode === "buy" ? `$${balance.toFixed(2)}` : userHoldings}
+              {mode === "buy" ? `$${Number(balance).toFixed(2)}` : userHoldings}
             </strong>
           </p>
         </div>
