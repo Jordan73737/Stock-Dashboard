@@ -1,22 +1,23 @@
-const express = require("express");
-const cors = require("cors");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { Pool } = require("pg");
-const dotenv = require("dotenv");
-dotenv.config();
+// Import required modules
+const express = require("express"); // Web framework for creating routes
+const cors = require("cors"); // Middleware to handle Cross-Origin requests
+const bcrypt = require("bcrypt"); // For password hashing
+const jwt = require("jsonwebtoken"); // For token generation and verification
+const { Pool } = require("pg"); // PostgreSQL client
+const dotenv = require("dotenv"); // For loading environment variables
+dotenv.config(); // Load environment variables from .env file
 
-// Create Express app
+// Initialize Express app
 const app = express();
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Allow CORS requests
+app.use(express.json()); // Automatically parse incoming JSON in requests
 
-// PostgreSQL connection
+// Set up PostgreSQL database connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL, // Uses DATABASE_URL from .env
 });
 
-// Create tables if they don't exist
+// Initialize database: create tables if they don't already exist
 async function initDatabase() {
   const client = await pool.connect();
   try {
@@ -38,39 +39,50 @@ async function initDatabase() {
       );
     `);
   } finally {
-    client.release();
+    client.release(); // Always release the client back to the pool
   }
 }
+initDatabase(); // Run the DB setup on server start
 
-initDatabase();
+// ---------------------- AUTHENTICATION ROUTES ---------------------- //
 
-// Authentication Routes
+// Register a new user
 app.post("/api/register", async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Hash the user's password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Insert new user into DB and return their new ID
     const result = await pool.query(
       "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
       [email, hashedPassword]
     );
 
+    // Generate a JWT token with the user's ID
     const token = jwt.sign({ id: result.rows[0].id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "7d", // Token valid for 7 days
     });
 
-    res.json({ token, email });
+    res.json({ token, email }); // Respond with token and email
   } catch (err) {
-    res.status(400).json({ error: err.message});
+    // Catch DB errors (like duplicate email)
+    if (err.code === "23505") {
+      // PostgreSQL unique constraint violation
+      return res.status(400).json({ error: "This user already exists" });
+    }
+    res.status(500).json({ error: "Server error" });
   }
 });
 
+// Log in a user
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Check if the user exists
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
@@ -80,51 +92,55 @@ app.post("/api/login", async (req, res) => {
 
     const user = result.rows[0];
 
+    // Compare input password with hashed password in DB
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    // Generate a JWT token if credentials are valid
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.json({ token, email });
+    res.json({ token, email }); // Respond with token and email
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// ---------------------- AUTH MIDDLEWARE ---------------------- //
+
+// Middleware to protect private routes by verifying JWT
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = authHeader && authHeader.split(" ")[1]; // Format: "Bearer <token>"
 
-  if (!token) {
-    return res.status(401).json({ error: "No token provided" });
-  }
+  if (!token) return res.status(401).json({ error: "No token provided" });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: "Invalid token" });
-    }
-    req.user = user;
-    next();
+    if (err) return res.status(403).json({ error: "Invalid token" });
+    req.user = user; // Attach user info to request object
+    next(); // Proceed to the next middleware or route
   });
 }
 
-// Favorites API
+// ---------------------- FAVORITES API ---------------------- //
+
+// Get user's favorite stocks
 app.get("/api/favorites", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM favorites WHERE user_id = $1 ORDER BY created_at DESC",
       [req.user.id]
     );
-    res.json(result.rows);
+    res.json(result.rows); // Send back user's favorites
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// Add a new favorite stock
 app.post("/api/favorites", authenticateToken, async (req, res) => {
   const { symbol, name } = req.body;
 
@@ -139,6 +155,7 @@ app.post("/api/favorites", authenticateToken, async (req, res) => {
   }
 });
 
+// Remove a favorite stock
 app.delete("/api/favorites/:symbol", authenticateToken, async (req, res) => {
   try {
     await pool.query(
@@ -151,9 +168,15 @@ app.delete("/api/favorites/:symbol", authenticateToken, async (req, res) => {
   }
 });
 
-const authRoutes = require("./routes/auth");
-app.use("/api/auth", authRoutes);
+// ---------------------- MOUNT PASSWORD RESET ROUTES ---------------------- //
 
+// Import and use routes for password reset (handled in separate file)
+const authRoutes = require("./routes/auth");
+app.use("/api/auth", authRoutes); // Mounts to /api/auth/forgot-password and /reset-password
+
+// ---------------------- START THE SERVER ---------------------- //
+
+// Run server on specified port or default to 5000
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

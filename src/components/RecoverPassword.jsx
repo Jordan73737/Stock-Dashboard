@@ -21,7 +21,7 @@ const RecoverPassword = () => {
       if (response.ok) {
         setMessage("Reset email sent successfully.");
       } else {
-        setMessage(data.error || "Something went wrong.");
+        setMessage(data.error || "Something went wrong."); //pointless or statement?
       }
     } catch (err) {
       setMessage("Failed to send reset email.");
