@@ -8,9 +8,10 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
   const [balance, setBalance] = useState(0);
   const [userHoldings, setUserHoldings] = useState(0);
 
-  const price = parseFloat(
-    (mode === "buy" ? stock.sell : stock.buy).replace("$", "")
-  );
+  const price = stock
+    ? parseFloat((mode === "buy" ? stock.sell : stock.buy).replace("$", ""))
+    : 0;
+
   const total = (quantity * price).toFixed(2);
 
   const token = localStorage.getItem("token");
