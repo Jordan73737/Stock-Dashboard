@@ -232,6 +232,73 @@ app.get("/api/popular-stocks", async (req, res) => {
   }
 });
 
+// ---------------------- BALANCE & HOLDINGS ---------------------- //
+
+// Set fake balance
+app.post("/api/balance", authenticateToken, async (req, res) => {
+  const { balance } = req.body;
+  try {
+    await pool.query(`UPDATE users SET balance = $1 WHERE id = $2`, [
+      balance,
+      req.user.id,
+    ]);
+    res.json({ message: "Balance updated" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to set balance" });
+  }
+});
+
+// Get balance
+app.get("/api/balance", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT balance FROM users WHERE id = $1`, [
+      req.user.id,
+    ]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch balance" });
+  }
+});
+
+// Buy stock (add holding)
+app.post("/api/holdings", authenticateToken, async (req, res) => {
+  const { symbol, name, quantity, buy_price } = req.body;
+  try {
+    await pool.query(
+      `
+      INSERT INTO holdings (user_id, symbol, name, quantity, buy_price)
+      VALUES ($1, $2, $3, $4, $5)
+    `,
+      [req.user.id, symbol, name, quantity, buy_price]
+    );
+
+    // Deduct from user balance
+    const totalCost = quantity * buy_price;
+    await pool.query(`UPDATE users SET balance = balance - $1 WHERE id = $2`, [
+      totalCost,
+      req.user.id,
+    ]);
+
+    res.json({ message: "Stock purchased" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to buy stock" });
+  }
+});
+
+// Get holdings
+app.get("/api/holdings", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM holdings WHERE user_id = $1`,
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get holdings" });
+  }
+});
+
 // ---------------------- PASSWORD RESET ---------------------- //
 
 const authRoutes = require("./routes/auth");

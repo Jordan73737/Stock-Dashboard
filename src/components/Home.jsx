@@ -3,7 +3,7 @@ import axios from "axios";
 
 const Home = () => {
   const [stocks, setStocks] = useState([]);
-  const [visibleRows, setVisibleRows] = useState(20);
+  const [visibleRows, setVisibleRows] = useState(10);
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -16,64 +16,40 @@ const Home = () => {
         console.error("Failed to fetch stock data", error);
       }
     };
+
     fetchStocks();
   }, []);
 
   const handleBuy = async (stock) => {
-    const quantity = parseInt(prompt("Enter quantity to buy:"), 10);
-    if (!quantity || quantity <= 0) return;
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/holdings/buy`,
-        {
-          symbol: stock.symbol,
-          name: stock.name,
-          quantity,
-          buy_price: parseFloat(stock.buy.replace("$", "")),
+    const quantity = 1; // hardcoded for now
+    await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
+      {
+        symbol: stock.symbol,
+        name: stock.name,
+        quantity,
+        buy_price: parseFloat(stock.sell.replace("$", "")),
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      alert("Stock bought successfully!");
-    } catch (err) {
-      alert("Error buying stock");
-    }
+      }
+    );
+    alert("Bought!");
   };
-
-  const handleSell = async (stock) => {
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`,
-        { symbol: stock.symbol },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      alert("Stock sold successfully!");
-    } catch (err) {
-      alert("Error selling stock");
-    }
-  };
-
-  const handleLoadMore = () => setVisibleRows((prev) => prev + 20);
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4 text-center">Popular Stocks</h2>
-      <table className="w-full text-sm text-left border">
+      <table className="w-full text-sm border">
         <thead className="bg-gray-200">
           <tr>
             <th className="py-2 px-4">Company</th>
             <th className="py-2 px-4">Change %</th>
             <th className="py-2 px-4">Sell</th>
             <th className="py-2 px-4">Buy</th>
-            <th className="py-2 px-4">Buy</th>
-            <th className="py-2 px-4">Sell</th>
+            <th className="py-2 px-4">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -83,17 +59,13 @@ const Home = () => {
               <td className="py-2 px-4">{stock.change}</td>
               <td className="py-2 px-4">{stock.sell}</td>
               <td className="py-2 px-4">{stock.buy}</td>
-              <td className="py-2 px-4">
+              <td className="py-2 px-4 space-x-2">
                 <button
                   onClick={() => handleBuy(stock)}
-                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                  className="bg-green-600 text-white px-2 py-1 rounded">
                   Buy
                 </button>
-              </td>
-              <td className="py-2 px-4">
-                <button
-                  onClick={() => handleSell(stock)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                <button className="bg-red-600 text-white px-2 py-1 rounded">
                   Sell
                 </button>
               </td>
@@ -101,16 +73,6 @@ const Home = () => {
           ))}
         </tbody>
       </table>
-
-      {visibleRows < stocks.length && (
-        <div className="text-center mt-4">
-          <button
-            onClick={handleLoadMore}
-            className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-            Load More
-          </button>
-        </div>
-      )}
     </div>
   );
 };
