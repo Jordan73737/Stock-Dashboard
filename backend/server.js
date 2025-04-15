@@ -151,6 +151,44 @@ app.delete("/api/favorites/:symbol", authenticateToken, async (req, res) => {
   }
 });
 
+app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
+  const { symbol, name, quantity, buy_price } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO holdings (user_id, symbol, name, quantity, buy_price)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [req.user.id, symbol, name, quantity, buy_price]
+    );
+    res.json({ message: "Stock purchased" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to purchase stock" });
+  }
+});
+
+app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
+  const { symbol } = req.body;
+  try {
+    await pool.query(
+      `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
+      [req.user.id, symbol]
+    );
+    res.json({ message: "Stock sold" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to sell stock" });
+  }
+});
+
+app.get("/api/holdings", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM holdings WHERE user_id = $1`,
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get holdings" });
+  }
+});
 // ---------------------- POPULAR STOCKS API ---------------------- //
 
 app.get("/api/popular-stocks", async (req, res) => {
