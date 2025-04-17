@@ -25,6 +25,32 @@ const Home = () => {
     return () => window.removeEventListener("balanceUpdated", updateBalance);
   }, []);
 
+  const fetchPopularStocks = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/popular-stocks`
+      );
+      setRawStocks(response.data);
+    } catch (error) {
+      console.error("Failed to fetch stock data", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPopularStocks();
+  }, []);
+
+  useEffect(() => {
+    const handleBalanceUpdate = () => {
+      fetchPopularStocks();
+      dispatch(fetchFavorites());
+    };
+
+    window.addEventListener("balanceUpdated", handleBalanceUpdate);
+    return () =>
+      window.removeEventListener("balanceUpdated", handleBalanceUpdate);
+  }, [dispatch]);
+
   // 1. Fetch stocks only once
   useEffect(() => {
     const fetchStocks = async () => {

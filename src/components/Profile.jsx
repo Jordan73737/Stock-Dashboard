@@ -136,6 +136,16 @@ const Profile = () => {
     fetchProfileData();
   }, []);
 
+  useEffect(() => {
+    const handleBalanceUpdate = () => {
+      fetchProfileData();
+    };
+
+    window.addEventListener("balanceUpdated", handleBalanceUpdate);
+    return () =>
+      window.removeEventListener("balanceUpdated", handleBalanceUpdate);
+  }, []);
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Your Profile</h2>
