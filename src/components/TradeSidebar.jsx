@@ -63,7 +63,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
       const endpoint =
         mode === "buy"
-          ? `${import.meta.env.VITE_API_BASE_URL}/api/holdings`
+          ? `${import.meta.env.VITE_API_BASE_URL}/api/holdings/buy`
           : `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`;
 
       const payload =

@@ -173,8 +173,17 @@ app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
        DO UPDATE SET quantity = holdings.quantity + $4`,
       [req.user.id, symbol, name, quantity, buy_price]
     );
+
+    // Deduct balance too
+    const totalCost = quantity * buy_price;
+    await pool.query(`UPDATE users SET balance = balance - $1 WHERE id = $2`, [
+      totalCost,
+      req.user.id,
+    ]);
+
     res.json({ message: "Stock purchased" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to purchase stock" });
   }
 });
