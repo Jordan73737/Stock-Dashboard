@@ -113,20 +113,33 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           <input
             type="range"
             min="0"
-            max={mode === "buy" ? balance : userHoldings * price}
+            max={
+              Number.isFinite(mode === "buy" ? balance : userHoldings * price)
+                ? mode === "buy"
+                  ? balance
+                  : userHoldings * price
+                : 0
+            }
             step="0.01"
             value={investAmount}
             onChange={(e) => setInvestAmount(parseFloat(e.target.value))}
             className="w-full"
           />
+
           <div className="text-sm mt-1">
             <p>
               {mode === "buy"
                 ? `$${
-                    investAmount?.toFixed(2) || "0.00"
-                  } = ${roundedQty} shares`
-                : `${roundedQty} shares = $${
-                    (roundedQty * price)?.toFixed(2) || "0.00"
+                    Number.isFinite(investAmount)
+                      ? investAmount.toFixed(2)
+                      : "0.00"
+                  } = ${Number.isFinite(roundedQty) ? roundedQty : "0"} shares`
+                : `${
+                    Number.isFinite(roundedQty) ? roundedQty : "0"
+                  } shares = $${
+                    Number.isFinite(roundedQty * price)
+                      ? (roundedQty * price).toFixed(2)
+                      : "0.00"
                   }`}
             </p>
           </div>
