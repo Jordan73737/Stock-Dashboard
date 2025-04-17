@@ -94,13 +94,15 @@ const Profile = () => {
     try {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
-        { balance: balance + depositAmount }, // new balance = old + deposit
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { balance: Number(balance) + Number(inputBalance) },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      if (Number(inputBalance) <= 0) {
+        alert("Please enter a positive number to deposit.");
+        return;
+      }
+
       setInputBalance(""); // Clear the input
       window.dispatchEvent(new Event("balanceUpdated"));
       fetchProfileData(); // Refresh balance on screen

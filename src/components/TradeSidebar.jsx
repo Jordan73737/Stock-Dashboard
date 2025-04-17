@@ -40,8 +40,13 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
     const extractedPrice = stock
       ? parseFloat(
-          (mode === "buy" ? stock.sell : stock.buy)?.replace("$", "")
-        ) || 0
+          (mode === "sell" ? stock.currentPrice : stock.sell)?.replace?.(
+            "$",
+            ""
+          ) ||
+            stock.sell ||
+            0
+        )
       : 0;
 
     setPrice(extractedPrice);
@@ -85,7 +90,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // ✅ Show success message before closing
+      // Show success message before closing
       if (mode === "buy") {
         setSuccessMessage(
           `Purchased ${roundedQty} shares of ${
@@ -103,8 +108,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
       setTimeout(() => {
         setSuccessMessage("");
-        onClose();
-      }, 1500);
+      });
     } catch (err) {
       setFeedback("Transaction failed");
       console.error(err);
