@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import TradeSidebar from "./TradeSidebar"; // ✅ Import your TradeSidebar
-import handleToggleFavorite from "./Dashboard";
-import toggleFavorite from "../slices/stocksSlice";
+import { toggleFavorite } from "../slices/stocksSlice";
 import { useDispatch } from "react-redux";
 
 const Home = () => {
