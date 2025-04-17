@@ -51,8 +51,14 @@ const Home = () => {
   };
 
   const handleToggleFavorite = async (symbol, name, isCurrentlyFavorite) => {
+    console.log(
+      "Toggling favorite:",
+      symbol,
+      "Currently:",
+      isCurrentlyFavorite
+    );
     await dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
-    dispatch(fetchFavorites()); // Refresh favorite status from DB
+    await dispatch(fetchFavorites()); // ensures enrichedStocks gets new data
   };
 
   return (
