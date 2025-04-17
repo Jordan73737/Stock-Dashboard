@@ -11,7 +11,7 @@ const Home = () => {
   const [tradeMode, setTradeMode] = useState(null);
 
   const dispatch = useDispatch();
-  const favorites = useSelector((state) => state.stocks.favorites);
+  const favorites = useSelector((state) => state.stocks.favorites || []);
 
   // 1. Fetch stocks only once
   useEffect(() => {
