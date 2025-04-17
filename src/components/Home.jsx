@@ -50,17 +50,9 @@ const Home = () => {
     setTradeMode(null);
   };
 
-  const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
-    dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
-
-    // Optimistically update local rawStocks
-    setRawStocks((prev) =>
-      prev.map((stock) =>
-        stock.symbol === symbol
-          ? { ...stock, favorite: !isCurrentlyFavorite }
-          : stock
-      )
-    );
+  const handleToggleFavorite = async (symbol, name, isCurrentlyFavorite) => {
+    await dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
+    dispatch(fetchFavorites()); // Refresh favorite status from DB
   };
 
   return (
