@@ -7,6 +7,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
   const [balance, setBalance] = useState(0);
   const [userHoldings, setUserHoldings] = useState(0);
   const [price, setPrice] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -35,6 +36,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
     setFeedback("");
     setInvestAmount(0);
+    setSuccessMessage("");
 
     const extractedPrice = stock
       ? parseFloat(
@@ -83,8 +85,26 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // ✅ Show success message before closing
+      if (mode === "buy") {
+        setSuccessMessage(
+          `Purchased ${roundedQty} shares of ${
+            stock.symbol
+          } for $${investAmount.toFixed(2)}`
+        );
+      } else {
+        const proceeds = (roundedQty * price).toFixed(2);
+        setSuccessMessage(
+          `${roundedQty} shares of ${stock.symbol} sold for $${proceeds}`
+        );
+      }
+
       window.dispatchEvent(new Event("balanceUpdated"));
-      onClose();
+
+      setTimeout(() => {
+        setSuccessMessage("");
+        onClose();
+      }, 1500);
     } catch (err) {
       setFeedback("Transaction failed");
       console.error(err);
@@ -151,6 +171,11 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         </div>
 
         {feedback && <p className="text-red-500 text-sm mb-2">{feedback}</p>}
+        {successMessage && (
+          <p className="text-green-600 text-sm mb-2 text-center">
+            {successMessage}
+          </p>
+        )}
 
         <button
           onClick={handleSubmit}

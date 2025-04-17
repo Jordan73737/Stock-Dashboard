@@ -1,11 +1,30 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import TradeSidebar from "./TradeSidebar";
 
 const Profile = () => {
   const [balance, setBalance] = useState(0);
   const [inputBalance, setInputBalance] = useState("");
   const [holdings, setHoldings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [tradeMode, setTradeMode] = useState(null);
+
+  const openTradeSidebar = (stock, mode) => {
+    setSelectedStock(stock);
+    setTradeMode(mode);
+  };
+
+  const closeSidebar = () => {
+    setSelectedStock(null);
+    setTradeMode(null);
+  };
+
+  const handleSidebarSuccess = (msg) => {
+    setSuccessMessage(msg);
+    fetchProfileData(); // Refresh holdings/balance
+  };
 
   const fetchProfileData = async () => {
     const token = localStorage.getItem("token");
@@ -63,19 +82,32 @@ const Profile = () => {
     }
   };
 
-  const handleSetBalance = async () => {
+  const handleDeposit = async () => {
+    const depositAmount = parseFloat(inputBalance);
+    if (isNaN(depositAmount) || depositAmount <= 0) {
+      alert("Please enter a positive amount.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
-    await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
-      { balance: inputBalance },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    window.dispatchEvent(new Event("balanceUpdated"));
-    fetchProfileData();
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
+        { balance: balance + depositAmount }, // new balance = old + deposit
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setInputBalance(""); // Clear the input
+      window.dispatchEvent(new Event("balanceUpdated"));
+      fetchProfileData(); // Refresh balance on screen
+    } catch (err) {
+      console.error("Failed to deposit funds", err);
+      alert("Failed to deposit. Try again.");
+    }
   };
 
   const handleSell = async (symbol) => {
@@ -111,17 +143,24 @@ const Profile = () => {
 
         <input
           type="number"
+          min="0"
+          step="0.01"
           value={inputBalance}
           onChange={(e) => setInputBalance(e.target.value)}
-          placeholder="Enter new balance"
+          placeholder="Enter deposit amount"
           className="border px-2 py-1 mr-2"
         />
         <button
-          onClick={handleSetBalance}
-          className="bg-blue-600 text-white px-3 py-1 rounded">
-          Set Balance
+          onClick={handleDeposit}
+          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+          Deposit
         </button>
       </div>
+      {successMessage && (
+        <p className="text-green-600 mb-4 text-center font-medium">
+          {successMessage}
+        </p>
+      )}
 
       <h3 className="text-xl font-semibold mt-6 mb-2">Your Holdings</h3>
 
@@ -167,9 +206,9 @@ const Profile = () => {
 
                 <td className="py-2 px-4">
                   <button
-                    onClick={() => handleSell(stock.symbol)}
+                    onClick={() => openTradeSidebar(stock, "sell")}
                     className="bg-red-600 text-white px-3 py-1 rounded">
-                    Sell 1
+                    Sell
                   </button>
                 </td>
               </tr>
@@ -177,6 +216,13 @@ const Profile = () => {
           </tbody>
         </table>
       )}
+      <TradeSidebar
+        isOpen={!!selectedStock}
+        onClose={closeSidebar}
+        stock={selectedStock}
+        mode={tradeMode}
+        onSuccess={handleSidebarSuccess}
+      />
     </div>
   );
 };
