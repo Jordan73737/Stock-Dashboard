@@ -10,7 +10,17 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  "https://stock-dashboard-drab.vercel.app", // ✅ Your Vercel frontend
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true, // if you're using cookies or auth headers
+  })
+);
+
 app.use(express.json());
 
 // Set up PostgreSQL database connection
