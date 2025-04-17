@@ -112,24 +112,25 @@ const Profile = () => {
     }
   };
 
-  const handleSell = async (symbol) => {
-    const token = localStorage.getItem("token");
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/sell`,
-        { symbol, quantity: 1 },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      window.dispatchEvent(new Event("balanceUpdated"));
-      fetchProfileData();
-    } catch (err) {
-      alert("Error selling stock.");
-    }
-  };
+  // Already Using The Sidebar To Handle Selling
+  // const handleSell = async (symbol) => {
+  //   const token = localStorage.getItem("token");
+  //   try {
+  //     await axios.post(
+  //       `${import.meta.env.VITE_API_BASE_URL}/api/sell`,
+  //       { symbol, quantity: 1 },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     window.dispatchEvent(new Event("balanceUpdated"));
+  //     fetchProfileData();
+  //   } catch (err) {
+  //     alert("Error selling stock.");
+  //   }
+  // };
 
   useEffect(() => {
     fetchProfileData();

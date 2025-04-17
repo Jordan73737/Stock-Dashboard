@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
+const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
   const [investAmount, setInvestAmount] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [balance, setBalance] = useState(0);
@@ -53,18 +53,18 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
     fetchData();
   }, [stock, mode]);
 
-  const quantity = price > 0 ? investAmount / price : 0;
-  const roundedQty = Math.floor(quantity * 10000) / 10000;
+  const rawQty = price > 0 ? investAmount / price : 0;
+  const roundedQty = Math.min(Math.floor(rawQty * 10000) / 10000, userHoldings);
 
   const handleSubmit = async () => {
     try {
-      if (mode === "buy" && (investAmount > balance || balance <= 0)) {
-        setFeedback("Insufficient funds");
+      if (mode === "buy" && (investAmount > balance || investAmount <= 0)) {
+        setFeedback("Insufficient funds or invalid amount.");
         return;
       }
 
-      if (mode === "sell" && roundedQty > userHoldings) {
-        setFeedback("You don't own that many");
+      if (mode === "sell" && (roundedQty > userHoldings || roundedQty <= 0)) {
+        setFeedback("You don't own that many or quantity is invalid.");
         return;
       }
 
@@ -90,25 +90,18 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Show success message before closing
-      if (mode === "buy") {
-        setSuccessMessage(
-          `Purchased ${roundedQty} shares of ${
-            stock.symbol
-          } for $${investAmount.toFixed(2)}`
-        );
-      } else {
-        const proceeds = (roundedQty * price).toFixed(2);
-        setSuccessMessage(
-          `${roundedQty} shares of ${stock.symbol} sold for $${proceeds}`
-        );
-      }
+      const msg =
+        mode === "buy"
+          ? `Purchased ${roundedQty} shares of ${
+              stock.symbol
+            } for $${investAmount.toFixed(2)}`
+          : `${roundedQty} shares of ${stock.symbol} sold for $${(
+              roundedQty * price
+            ).toFixed(2)}`;
 
+      setSuccessMessage(msg);
       window.dispatchEvent(new Event("balanceUpdated"));
-
-      // setTimeout(() => {
-      //   setSuccessMessage("");
-      // });
+      onSuccess?.(msg);
     } catch (err) {
       setFeedback("Transaction failed");
       console.error(err);
@@ -116,6 +109,15 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
   };
 
   if (!isOpen || !stock) return null;
+
+  const maxSliderValue =
+    mode === "buy"
+      ? balance > 0
+        ? balance.toFixed(2)
+        : 0
+      : userHoldings > 0 && price > 0
+      ? (userHoldings * price).toFixed(2)
+      : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -132,15 +134,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           <input
             type="range"
             min="0"
-            max={
-              mode === "buy"
-                ? balance > 0
-                  ? balance.toFixed(2)
-                  : 0
-                : userHoldings > 0 && price > 0
-                ? (userHoldings * price).toFixed(2)
-                : 0
-            }
+            max={maxSliderValue}
             step="0.01"
             value={investAmount}
             onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
@@ -187,16 +181,16 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         <button
           onClick={handleSubmit}
           className={`w-full py-2 rounded text-white mt-2 ${
-            (mode === "buy" && investAmount > balance) ||
-            (mode === "sell" && roundedQty > userHoldings)
+            (mode === "buy" && (investAmount > balance || investAmount <= 0)) ||
+            (mode === "sell" && (roundedQty > userHoldings || roundedQty <= 0))
               ? "bg-gray-400 cursor-not-allowed"
               : mode === "buy"
               ? "bg-blue-600 hover:bg-blue-700"
               : "bg-red-600 hover:bg-red-700"
           }`}
           disabled={
-            (mode === "buy" && investAmount > balance) ||
-            (mode === "sell" && roundedQty > userHoldings)
+            (mode === "buy" && (investAmount > balance || investAmount <= 0)) ||
+            (mode === "sell" && (roundedQty > userHoldings || roundedQty <= 0))
           }>
           Confirm {mode === "buy" ? "Purchase" : "Sale"}
         </button>

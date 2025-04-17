@@ -16,6 +16,15 @@ const Home = () => {
     console.log("Favorites updated in Redux:", favorites);
   }, [favorites]);
 
+  // Listens for balanceUpdated
+  useEffect(() => {
+    const updateBalance = async () => {
+      // Refetch or update UI state
+    };
+    window.addEventListener("balanceUpdated", updateBalance);
+    return () => window.removeEventListener("balanceUpdated", updateBalance);
+  }, []);
+
   // 1. Fetch stocks only once
   useEffect(() => {
     const fetchStocks = async () => {
@@ -132,6 +141,10 @@ const Home = () => {
         onClose={closeSidebar}
         stock={selectedStock}
         mode={tradeMode}
+        onSuccess={(msg) => {
+          console.log(msg);
+          window.dispatchEvent(new Event("balanceUpdated")); // Triggers profile/home update
+        }}
       />
     </div>
   );
