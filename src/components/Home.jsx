@@ -44,7 +44,7 @@ const Home = () => {
     }));
 
     setStocks(enriched);
-  }, [favorites, stocks.length]);
+  }, [favorites, stocks]);
 
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
