@@ -1,4 +1,3 @@
-// components/TradeSidebar.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -37,12 +36,12 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
       }
     };
 
-    // Safely parse price
+    // Parse price safely
     let parsed = 0;
     if (stock) {
       const raw = mode === "buy" ? stock.sell : stock.buy;
-      const stripped = raw.replace("$", "");
-      const num = parseFloat(stripped);
+      const cleaned = typeof raw === "string" ? raw.replace("$", "") : raw;
+      const num = parseFloat(cleaned);
       parsed = isNaN(num) ? 0 : num;
     }
 
@@ -123,8 +122,12 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           <div className="text-sm mt-1">
             <p>
               {mode === "buy"
-                ? `$${investAmount.toFixed(2)} = ${roundedQty} shares`
-                : `${roundedQty} shares = $${(roundedQty * price).toFixed(2)}`}
+                ? `$${
+                    investAmount?.toFixed(2) || "0.00"
+                  } = ${roundedQty} shares`
+                : `${roundedQty} shares = $${
+                    (roundedQty * price)?.toFixed(2) || "0.00"
+                  }`}
             </p>
           </div>
         </div>
@@ -133,7 +136,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           <p>
             {mode === "buy" ? "Balance" : "Holdings"}:{" "}
             <strong>
-              {mode === "buy" ? `$${balance.toFixed(2)}` : userHoldings}
+              {mode === "buy"
+                ? `$${balance?.toFixed(2) || "0.00"}`
+                : userHoldings}
             </strong>
           </p>
         </div>
