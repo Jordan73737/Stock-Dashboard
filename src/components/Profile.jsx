@@ -148,8 +148,12 @@ const Profile = () => {
                 <td className="py-2 px-4">{stock.symbol}</td>
                 <td className="py-2 px-4">{stock.name}</td>
                 <td className="py-2 px-4">{stock.quantity}</td>
-                <td className="py-2 px-4">${stock.buy_price.toFixed(2)}</td>
-                <td className="py-2 px-4">${stock.currentPrice.toFixed(2)}</td>
+                <td className="py-2 px-4">
+                  ${Number(stock.buy_price).toFixed(2)}
+                </td>
+                <td className="py-2 px-4">
+                  ${Number(stock.currentPrice).toFixed(2)}
+                </td>
                 <td
                   className={`py-2 px-4 font-semibold ${
                     stock.profitLoss > 0
@@ -158,8 +162,9 @@ const Profile = () => {
                       ? "text-red-600"
                       : "text-gray-600"
                   }`}>
-                  ${stock.profitLoss.toFixed(2)}
+                  ${Number(stock.profitLoss).toFixed(2)}
                 </td>
+
                 <td className="py-2 px-4">
                   <button
                     onClick={() => handleSell(stock.symbol)}
