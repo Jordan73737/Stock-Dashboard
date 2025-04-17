@@ -10,20 +10,29 @@ const Home = () => {
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeMode, setTradeMode] = useState(null); // 'buy' or 'sell'
 
+  //grab favourites from redux
+  const dispatch = useDispatch();
+  const favorites = useSelector((state) => state.stocks.favorites);
+
+  //supplementing each stock with a .favorite property:
   useEffect(() => {
     const fetchStocks = async () => {
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/popular-stocks`
         );
-        setStocks(response.data);
+        const enriched = response.data.map((stock) => ({
+          ...stock,
+          favorite: favorites.some((f) => f.symbol === stock.symbol),
+        }));
+        setStocks(enriched);
       } catch (error) {
         console.error("Failed to fetch stock data", error);
       }
     };
 
     fetchStocks();
-  }, []);
+  }, [favorites]);
 
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
@@ -85,7 +94,7 @@ const Home = () => {
                     viewBox="0 0 24 24"
                     fill={stock.favorite ? "currentColor" : "none"}
                     stroke="currentColor"
-                    className={`w-6 h-6 ${
+                    className={`w-6 h-6 mt-3 ${
                       stock.favorite ? "text-yellow-400" : "text-gray-400"
                     }`}>
                     <path

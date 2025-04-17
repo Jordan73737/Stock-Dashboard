@@ -156,7 +156,9 @@ app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
   try {
     await pool.query(
       `INSERT INTO holdings (user_id, symbol, name, quantity, buy_price)
-       VALUES ($1, $2, $3, $4, $5)`,
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, symbol)
+       DO UPDATE SET quantity = holdings.quantity + $4`,
       [req.user.id, symbol, name, quantity, buy_price]
     );
     res.json({ message: "Stock purchased" });
@@ -296,6 +298,54 @@ app.get("/api/holdings", authenticateToken, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: "Failed to get holdings" });
+  }
+});
+
+app.post("/api/sell", authenticateToken, async (req, res) => {
+  const { symbol, quantity } = req.body;
+
+  try {
+    // Get the existing holding
+    const result = await pool.query(
+      `SELECT quantity, buy_price FROM holdings WHERE user_id = $1 AND symbol = $2`,
+      [req.user.id, symbol]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "You don't own this stock" });
+    }
+
+    const current = result.rows[0];
+
+    if (quantity > current.quantity) {
+      return res.status(400).json({ error: "Insufficient stock quantity" });
+    }
+
+    const proceeds = quantity * current.buy_price;
+
+    // Update or delete the holding
+    if (quantity === current.quantity) {
+      await pool.query(
+        `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
+        [req.user.id, symbol]
+      );
+    } else {
+      await pool.query(
+        `UPDATE holdings SET quantity = quantity - $1 WHERE user_id = $2 AND symbol = $3`,
+        [quantity, req.user.id, symbol]
+      );
+    }
+
+    // Update balance
+    await pool.query(`UPDATE users SET balance = balance + $1 WHERE id = $2`, [
+      proceeds,
+      req.user.id,
+    ]);
+
+    res.json({ message: "Stock sold", proceeds });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Sell failed" });
   }
 });
 
