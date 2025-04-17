@@ -12,6 +12,9 @@ const Home = () => {
 
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.stocks.favorites || []);
+  useEffect(() => {
+    console.log("Favorites updated in Redux:", favorites);
+  }, [favorites]);
 
   // 1. Fetch stocks only once
   useEffect(() => {
