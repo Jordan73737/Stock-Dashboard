@@ -52,6 +52,15 @@ const Home = () => {
 
   const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
     dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
+
+    // Optimistically update local rawStocks
+    setRawStocks((prev) =>
+      prev.map((stock) =>
+        stock.symbol === symbol
+          ? { ...stock, favorite: !isCurrentlyFavorite }
+          : stock
+      )
+    );
   };
 
   return (

@@ -28,7 +28,6 @@ const Dashboard = () => {
   const searchRef = useRef(null);
 
   const API_KEY = "cv9n049r01qpd9s86e70cv9n049r01qpd9s86e7g";
-  const [rawStocks, setRawStocks] = useState([]);
 
   useEffect(() => {
     dispatch(fetchFavorites());
@@ -114,15 +113,6 @@ const Dashboard = () => {
 
   const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
     dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
-
-    // Optimistically update the stock's favorite status in rawStocks
-    setRawStocks((prev) =>
-      prev.map((stock) =>
-        stock.symbol === symbol
-          ? { ...stock, favorite: !isCurrentlyFavorite }
-          : stock
-      )
-    );
   };
 
   useEffect(() => {
