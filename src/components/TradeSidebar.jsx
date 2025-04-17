@@ -1,23 +1,19 @@
+// components/TradeSidebar.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
-  const [investment, setInvestment] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+  const [investAmount, setInvestAmount] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [balance, setBalance] = useState(0);
   const [userHoldings, setUserHoldings] = useState(0);
-
-  const price = stock
-    ? parseFloat((mode === "buy" ? stock.sell : stock.buy).replace("$", ""))
-    : 0;
+  const [price, setPrice] = useState(0);
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchData = async () => {
       if (!token || !stock?.symbol) return;
-
       const balanceRes = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
         {
@@ -37,28 +33,38 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
       setUserHoldings(matched ? matched.quantity : 0);
     };
 
-    fetchData();
-    setInvestment(0);
-    setQuantity(1);
     setFeedback("");
+    setInvestAmount(0);
+    setPrice(
+      stock
+        ? parseFloat((mode === "buy" ? stock.sell : stock.buy).replace("$", ""))
+        : 0
+    );
+    fetchData();
   }, [stock, mode]);
+
+  const quantity = price > 0 ? investAmount / price : 0;
+  const roundedQty = Math.floor(quantity * 10000) / 10000; // Limit to 4 decimals
 
   const handleSubmit = async () => {
     try {
+      if (mode === "buy" && investAmount > balance) {
+        setFeedback("Insufficient funds");
+        return;
+      }
+
+      if (mode === "sell" && roundedQty > userHoldings) {
+        setFeedback("You don't own that many");
+        return;
+      }
+
       if (mode === "buy") {
-        const qty = parseFloat((investment / price).toFixed(4));
-
-        if (investment > balance || qty <= 0) {
-          setFeedback("Insufficient funds or invalid amount");
-          return;
-        }
-
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
           {
             symbol: stock.symbol,
             name: stock.name,
-            quantity: qty,
+            quantity: roundedQty,
             buy_price: price,
           },
           {
@@ -66,14 +72,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           }
         );
       } else {
-        if (quantity > userHoldings) {
-          setFeedback("You don't own that many");
-          return;
-        }
-
         await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/sell`,
-          { symbol: stock.symbol, quantity },
+          `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`,
+          { symbol: stock.symbol, quantity: roundedQty },
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -83,14 +84,11 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
       window.dispatchEvent(new Event("balanceUpdated"));
       onClose();
     } catch (err) {
-      console.error(err);
       setFeedback("Transaction failed");
     }
   };
 
   if (!isOpen || !stock) return null;
-
-  const computedShares = investment / price;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -100,67 +98,33 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
           {mode === "buy" ? "Buy" : "Sell"} {stock.name} ({stock.symbol})
         </h2>
 
-        {mode === "buy" ? (
-          <div className="mb-4">
-            <label className="block font-medium mb-1">
-              How much to invest (£)
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={balance}
-              step={1}
-              value={investment}
-              onChange={(e) => setInvestment(Number(e.target.value))}
-              className="w-full mb-2"
-            />
-            <div className="text-sm text-center">
-              <p>
-                £{investment} ={" "}
-                {isNaN(computedShares) ? "0" : computedShares.toFixed(4)} shares
-                of {stock.symbol}
-              </p>
-            </div>
+        <div className="mb-4">
+          <label className="block font-medium mb-1">
+            {mode === "buy" ? "Investment Amount ($)" : "Amount to Sell"}
+          </label>
+          <input
+            type="range"
+            min="0"
+            max={mode === "buy" ? balance : userHoldings * price}
+            step="0.01"
+            value={investAmount}
+            onChange={(e) => setInvestAmount(parseFloat(e.target.value))}
+            className="w-full"
+          />
+          <div className="text-sm mt-1">
+            <p>
+              {mode === "buy"
+                ? `$${investAmount.toFixed(2)} = ${roundedQty} shares`
+                : `${roundedQty} shares = $${(roundedQty * price).toFixed(2)}`}
+            </p>
           </div>
-        ) : (
-          <div className="mb-4">
-            <label className="block font-medium mb-1">Quantity</label>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="px-3 py-1 bg-gray-200 rounded">
-                -
-              </button>
-              <input
-                type="number"
-                min={1}
-                className="border px-2 py-1 w-20 text-center"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              />
-              <button
-                onClick={() => setQuantity((q) => q + 1)}
-                className="px-3 py-1 bg-gray-200 rounded">
-                +
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
 
         <div className="mb-2 text-sm">
           <p>
-            {mode === "buy" ? "Estimated Cost" : "Estimated Proceeds"}:{" "}
+            {mode === "buy" ? "Balance" : "Holdings"}:{" "}
             <strong>
-              £
-              {mode === "buy"
-                ? investment.toFixed(2)
-                : (quantity * price).toFixed(2)}
-            </strong>
-          </p>
-          <p>
-            Your {mode === "buy" ? "Balance" : "Holdings"}:{" "}
-            <strong>
-              {mode === "buy" ? `£${balance.toFixed(2)}` : userHoldings}
+              {mode === "buy" ? `$${balance.toFixed(2)}` : userHoldings}
             </strong>
           </p>
         </div>
@@ -169,17 +133,17 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
         <button
           onClick={handleSubmit}
-          className={`w-full py-2 rounded text-white ${
-            (mode === "buy" && investment <= 0) ||
-            (mode === "sell" && quantity > userHoldings)
+          className={`w-full py-2 rounded text-white mt-2 ${
+            (mode === "buy" && investAmount > balance) ||
+            (mode === "sell" && roundedQty > userHoldings)
               ? "bg-gray-400 cursor-not-allowed"
               : mode === "buy"
               ? "bg-blue-600 hover:bg-blue-700"
               : "bg-red-600 hover:bg-red-700"
           }`}
           disabled={
-            (mode === "buy" && investment <= 0) ||
-            (mode === "sell" && quantity > userHoldings)
+            (mode === "buy" && investAmount > balance) ||
+            (mode === "sell" && roundedQty > userHoldings)
           }>
           Confirm {mode === "buy" ? "Purchase" : "Sale"}
         </button>

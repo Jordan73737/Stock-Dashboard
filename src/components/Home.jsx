@@ -1,38 +1,50 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import TradeSidebar from "./TradeSidebar"; // ✅ Import your TradeSidebar
-import { toggleFavorite } from "../slices/stocksSlice";
-import { useDispatch } from "react-redux";
+import TradeSidebar from "./TradeSidebar";
+import { toggleFavorite, fetchFavorites } from "../slices/stocksSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const Home = () => {
   const [stocks, setStocks] = useState([]);
   const [visibleRows, setVisibleRows] = useState(10);
   const [selectedStock, setSelectedStock] = useState(null);
-  const [tradeMode, setTradeMode] = useState(null); // 'buy' or 'sell'
+  const [tradeMode, setTradeMode] = useState(null);
 
-  //grab favourites from redux
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.stocks.favorites);
 
-  //supplementing each stock with a .favorite property:
+  // Fetch stocks on mount
   useEffect(() => {
     const fetchStocks = async () => {
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/popular-stocks`
         );
-        const enriched = response.data.map((stock) => ({
-          ...stock,
-          favorite: favorites.some((f) => f.symbol === stock.symbol),
-        }));
-        setStocks(enriched);
+        setStocks(response.data);
       } catch (error) {
         console.error("Failed to fetch stock data", error);
       }
     };
 
     fetchStocks();
-  }, [favorites]);
+  }, []);
+
+  // Fetch favorites on mount
+  useEffect(() => {
+    dispatch(fetchFavorites());
+  }, [dispatch]);
+
+  // Enrich stocks with favorite flag when favorites or stocks update
+  useEffect(() => {
+    if (stocks.length === 0) return;
+
+    const enriched = stocks.map((stock) => ({
+      ...stock,
+      favorite: favorites.some((f) => f.symbol === stock.symbol),
+    }));
+
+    setStocks(enriched);
+  }, [favorites, stocks.length]);
 
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
@@ -46,8 +58,6 @@ const Home = () => {
 
   const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
     dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
-
-    // Update local stock list to reflect favorite toggle immediately
     setStocks((prev) =>
       prev.map((stock) =>
         stock.symbol === symbol
@@ -97,7 +107,7 @@ const Home = () => {
                       stock.favorite
                     )
                   }
-                  className="w-6 h-6 text-yellow-400">
+                  className="w-6 h-6">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -120,7 +130,6 @@ const Home = () => {
         </tbody>
       </table>
 
-      {/* ✅ TradeSidebar rendered conditionally */}
       <TradeSidebar
         isOpen={!!selectedStock}
         onClose={closeSidebar}
