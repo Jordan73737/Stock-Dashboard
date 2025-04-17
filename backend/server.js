@@ -41,14 +41,14 @@ async function initDatabase() {
       );
 
       CREATE TABLE IF NOT EXISTS holdings (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        symbol VARCHAR(20) NOT NULL,
-        name VARCHAR(100) NOT NULL,
-        quantity NUMERIC NOT NULL,
-        buy_price NUMERIC NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, symbol)
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      symbol VARCHAR(20) NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      quantity NUMERIC NOT NULL,  -- ✅ was INTEGER
+      buy_price NUMERIC NOT NULL, -- ✅ was likely fine
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, symbol)
       );
     `);
   } finally {
