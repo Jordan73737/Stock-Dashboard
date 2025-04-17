@@ -58,7 +58,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
   const handleSubmit = async () => {
     try {
-      if (mode === "buy" && investAmount > balance) {
+      if (mode === "buy" && (investAmount > balance || balance <= 0)) {
         setFeedback("Insufficient funds");
         return;
       }
@@ -106,9 +106,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
 
       window.dispatchEvent(new Event("balanceUpdated"));
 
-      setTimeout(() => {
-        setSuccessMessage("");
-      });
+      // setTimeout(() => {
+      //   setSuccessMessage("");
+      // });
     } catch (err) {
       setFeedback("Transaction failed");
       console.error(err);
@@ -133,10 +133,12 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
             type="range"
             min="0"
             max={
-              Number.isFinite(mode === "buy" ? balance : userHoldings * price)
-                ? mode === "buy"
-                  ? balance
-                  : userHoldings * price
+              mode === "buy"
+                ? balance > 0
+                  ? balance.toFixed(2)
+                  : 0
+                : userHoldings > 0 && price > 0
+                ? (userHoldings * price).toFixed(2)
                 : 0
             }
             step="0.01"
@@ -144,6 +146,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
             onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
             className="w-full"
           />
+
           <div className="text-sm mt-1">
             <p>
               {mode === "buy"
