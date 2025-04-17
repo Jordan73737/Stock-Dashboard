@@ -5,7 +5,7 @@ import { toggleFavorite, fetchFavorites } from "../slices/stocksSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const Home = () => {
-  const [stocks, setStocks] = useState([]);
+  const [rawStocks, setRawStocks] = useState([]);
   const [visibleRows, setVisibleRows] = useState(10);
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeMode, setTradeMode] = useState(null);
@@ -13,14 +13,14 @@ const Home = () => {
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.stocks.favorites);
 
-  // Fetch stocks on mount
+  // 1. Fetch stocks only once
   useEffect(() => {
     const fetchStocks = async () => {
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/popular-stocks`
         );
-        setStocks(response.data);
+        setRawStocks(response.data);
       } catch (error) {
         console.error("Failed to fetch stock data", error);
       }
@@ -29,22 +29,16 @@ const Home = () => {
     fetchStocks();
   }, []);
 
-  // Fetch favorites on mount
+  // 2. Fetch favorites only once
   useEffect(() => {
     dispatch(fetchFavorites());
   }, [dispatch]);
 
-  // Enrich stocks with favorite flag when favorites or stocks update
-  useEffect(() => {
-    if (stocks.length === 0) return;
-
-    const enriched = stocks.map((stock) => ({
-      ...stock,
-      favorite: favorites.some((f) => f.symbol === stock.symbol),
-    }));
-
-    setStocks(enriched);
-  }, [favorites, stocks]);
+  // 3. Combine stocks and favorite status
+  const enrichedStocks = rawStocks.map((stock) => ({
+    ...stock,
+    favorite: favorites.some((f) => f.symbol === stock.symbol),
+  }));
 
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
@@ -58,13 +52,6 @@ const Home = () => {
 
   const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
     dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
-    setStocks((prev) =>
-      prev.map((stock) =>
-        stock.symbol === symbol
-          ? { ...stock, favorite: !isCurrentlyFavorite }
-          : stock
-      )
-    );
   };
 
   return (
@@ -82,7 +69,7 @@ const Home = () => {
           </tr>
         </thead>
         <tbody>
-          {stocks.slice(0, visibleRows).map((stock, index) => (
+          {enrichedStocks.slice(0, visibleRows).map((stock, index) => (
             <tr key={index} className="border-b text-center">
               <td className="py-2 px-4">{stock.name}</td>
               <td className="py-2 px-4">{stock.change}</td>
