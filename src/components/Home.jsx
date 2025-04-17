@@ -44,10 +44,19 @@ const Home = () => {
     setTradeMode(null);
   };
 
-  const dispatch = useDispatch();
   const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
     dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
+
+    // Update local stock list to reflect favorite toggle immediately
+    setStocks((prev) =>
+      prev.map((stock) =>
+        stock.symbol === symbol
+          ? { ...stock, favorite: !isCurrentlyFavorite }
+          : stock
+      )
+    );
   };
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4 text-center">Popular Stocks</h2>
