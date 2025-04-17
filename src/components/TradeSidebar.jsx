@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
 const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
@@ -40,12 +40,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
     const extractedPrice = stock
       ? parseFloat(
-          (mode === "sell" ? stock.currentPrice : stock.sell)?.replace?.(
-            "$",
-            ""
-          ) ||
-            stock.sell ||
-            0
+          (mode === "sell"
+            ? stock.currentPrice
+            : stock.sell?.replace?.("$", "")) || 0
         )
       : 0;
 
@@ -53,17 +50,25 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     fetchData();
   }, [stock, mode]);
 
-  const rawQty = price > 0 ? investAmount / price : 0;
-  const roundedQty = Math.min(Math.floor(rawQty * 10000) / 10000, userHoldings);
+  const rawQty = useMemo(() => {
+    return price > 0 ? investAmount / price : 0;
+  }, [investAmount, price]);
+
+  const roundedQty = useMemo(() => {
+    return Math.floor(rawQty * 10000) / 10000;
+  }, [rawQty]);
 
   const handleSubmit = async () => {
     try {
-      if (mode === "buy" && (investAmount > balance || investAmount <= 0)) {
+      if (
+        mode === "buy" &&
+        (investAmount <= 0 || roundedQty <= 0 || roundedQty * price > balance)
+      ) {
         setFeedback("Insufficient funds or invalid amount.");
         return;
       }
 
-      if (mode === "sell" && (roundedQty > userHoldings || roundedQty <= 0)) {
+      if (mode === "sell" && (roundedQty <= 0 || roundedQty > userHoldings)) {
         setFeedback("You don't own that many or quantity is invalid.");
         return;
       }
