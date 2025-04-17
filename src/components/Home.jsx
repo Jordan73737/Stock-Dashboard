@@ -100,7 +100,7 @@ const Home = () => {
                     viewBox="0 0 24 24"
                     fill={stock.favorite ? "currentColor" : "none"}
                     stroke="currentColor"
-                    className={`w-6 h-6 mt-3 ${
+                    className={`w-6 h-6 mt-1 ${
                       stock.favorite ? "text-yellow-400" : "text-gray-400"
                     }`}>
                     <path

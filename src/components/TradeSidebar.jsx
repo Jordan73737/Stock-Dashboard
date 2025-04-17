@@ -14,37 +14,46 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!token || !stock?.symbol) return;
-      const balanceRes = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setBalance(balanceRes.data.balance);
+      try {
+        const balanceRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setBalance(balanceRes.data.balance);
 
-      const holdingsRes = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+        const holdingsRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-      const matched = holdingsRes.data.find((h) => h.symbol === stock.symbol);
-      setUserHoldings(matched ? matched.quantity : 0);
+        const matched = holdingsRes.data.find((h) => h.symbol === stock.symbol);
+        setUserHoldings(matched ? matched.quantity : 0);
+      } catch (err) {
+        setFeedback("Failed to load account info");
+      }
     };
 
+    // Safely parse price
+    let parsed = 0;
+    if (stock) {
+      const raw = mode === "buy" ? stock.sell : stock.buy;
+      const stripped = raw.replace("$", "");
+      const num = parseFloat(stripped);
+      parsed = isNaN(num) ? 0 : num;
+    }
+
+    setPrice(parsed);
     setFeedback("");
     setInvestAmount(0);
-    setPrice(
-      stock
-        ? parseFloat((mode === "buy" ? stock.sell : stock.buy).replace("$", ""))
-        : 0
-    );
     fetchData();
   }, [stock, mode]);
 
   const quantity = price > 0 ? investAmount / price : 0;
-  const roundedQty = Math.floor(quantity * 10000) / 10000; // Limit to 4 decimals
+  const roundedQty = Math.floor(quantity * 10000) / 10000;
 
   const handleSubmit = async () => {
     try {
