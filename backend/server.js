@@ -10,14 +10,17 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
-const allowedOrigins = [
-  "https://stock-dashboard-drab.vercel.app", // ✅ Your Vercel frontend
-];
+const allowedOrigins = ["https://stock-dashboard-drab.vercel.app"];
+// CORS browser security feature tells backend that its ok to fetch data for a different front domain (CORS prevents unauthorized cross-origin requests)
+// Adds response headers like:
+// Access-Control-Allow-Origin: https://stock-dashboard-drab.vercel.app
+// Access-Control-Allow-Credentials: true
 
+//Function call to use CORS middlewhere with settings: allow this origin to accept credentials
 app.use(
   cors({
     origin: allowedOrigins,
-    credentials: true, // if you're using cookies or auth headers
+    credentials: true, // cookies or headers are allowed
   })
 );
 

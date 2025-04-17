@@ -13,7 +13,7 @@ import {
   updateStockPrice,
   updateFavoriteStatus,
   setStocks,
-  toggleFavorite
+  toggleFavorite,
 } from "../slices/stocksSlice";
 
 const Dashboard = () => {
@@ -28,6 +28,7 @@ const Dashboard = () => {
   const searchRef = useRef(null);
 
   const API_KEY = "cv9n049r01qpd9s86e70cv9n049r01qpd9s86e7g";
+  const [rawStocks, setRawStocks] = useState([]);
 
   useEffect(() => {
     dispatch(fetchFavorites());
@@ -107,12 +108,21 @@ const Dashboard = () => {
 
   const handleRemoveStock = (symbol) => {
     dispatch(removeFavorite(symbol));
-    const updatedStocks = stocks.filter(stock => stock.symbol !== symbol);
+    const updatedStocks = stocks.filter((stock) => stock.symbol !== symbol);
     dispatch(setStocks(updatedStocks));
   };
 
   const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
     dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
+
+    // Optimistically update the stock's favorite status in rawStocks
+    setRawStocks((prev) =>
+      prev.map((stock) =>
+        stock.symbol === symbol
+          ? { ...stock, favorite: !isCurrentlyFavorite }
+          : stock
+      )
+    );
   };
 
   useEffect(() => {
@@ -137,14 +147,18 @@ const Dashboard = () => {
       );
 
       setTimeout(() => {
-        dispatch(updateStockHighlight({ id: stockToUpdate.id, highlight: false }));
+        dispatch(
+          updateStockHighlight({ id: stockToUpdate.id, highlight: false })
+        );
       }, 1000);
     }, 5000);
 
     return () => clearInterval(updateInterval);
   }, [stocks, dispatch]);
 
-  const sortedStocks = [...stocks].sort((a, b) => (b.favorite === true) - (a.favorite === true));
+  const sortedStocks = [...stocks].sort(
+    (a, b) => (b.favorite === true) - (a.favorite === true)
+  );
 
   return (
     <>
@@ -153,7 +167,9 @@ const Dashboard = () => {
       </h1>
 
       {error && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+        <div
+          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6"
+          role="alert">
           <p>{error}</p>
         </div>
       )}
@@ -170,9 +186,10 @@ const Dashboard = () => {
           />
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition-colors"
-            onClick={() => searchQuery.trim() && handleAddStock(searchQuery, searchQuery)}
-            disabled={isSearching}
-          >
+            onClick={() =>
+              searchQuery.trim() && handleAddStock(searchQuery, searchQuery)
+            }
+            disabled={isSearching}>
             Add Stock
           </button>
         </div>
@@ -183,10 +200,13 @@ const Dashboard = () => {
               <div
                 key={result.symbol}
                 className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
-                onClick={() => handleAddStock(result.symbol, result.description)}
-              >
+                onClick={() =>
+                  handleAddStock(result.symbol, result.description)
+                }>
                 <div className="font-medium">{result.symbol}</div>
-                <div className="text-sm text-gray-600">{result.description}</div>
+                <div className="text-sm text-gray-600">
+                  {result.description}
+                </div>
               </div>
             ))}
           </div>
@@ -229,8 +249,7 @@ const Dashboard = () => {
                   key={stock.id}
                   className={`border-b border-gray-200 transition-colors ${
                     stock.highlight ? "bg-blue-100" : "hover:bg-gray-50"
-                  } ${stock.error ? "opacity-70" : ""}`}
-                >
+                  } ${stock.error ? "opacity-70" : ""}`}>
                   <td className="py-4 px-4">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
@@ -238,31 +257,42 @@ const Dashboard = () => {
                       </div>
                       <div>
                         <div className="font-medium">{stock.name}</div>
-                        <div className="text-sm text-gray-500">{stock.symbol}</div>
+                        <div className="text-sm text-gray-500">
+                          {stock.symbol}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-right font-medium">${stock.price}</td>
+                  <td className="py-4 px-4 text-right font-medium">
+                    ${stock.price}
+                  </td>
                   <td
                     className={`py-4 px-4 text-right font-medium ${
-                      parseFloat(stock.change) >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
+                      parseFloat(stock.change) >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}>
                     {parseFloat(stock.change) >= 0 ? "+" : ""}
                     {stock.change}%
                   </td>
                   <td className="py-4 px-4 text-center">
                     <button
-                      onClick={() => handleToggleFavorite(stock.symbol, stock.name, stock.favorite)}
-                      className="focus:outline-none mx-auto block"
-                    >
+                      onClick={() =>
+                        handleToggleFavorite(
+                          stock.symbol,
+                          stock.name,
+                          stock.favorite
+                        )
+                      }
+                      className="focus:outline-none mx-auto block">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill={stock.favorite ? "currentColor" : "none"}
                         stroke="currentColor"
-                        className={`w-6 h-6 ${stock.favorite ? "text-yellow-400" : "text-gray-400"}`}
-                      >
+                        className={`w-6 h-6 ${
+                          stock.favorite ? "text-yellow-400" : "text-gray-400"
+                        }`}>
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -275,15 +305,13 @@ const Dashboard = () => {
                   <td className="py-4 px-4 text-center">
                     <button
                       onClick={() => handleRemoveStock(stock.symbol)}
-                      className="text-gray-500 hover:text-red-600 focus:outline-none transition-colors"
-                    >
+                      className="text-gray-500 hover:text-red-600 focus:outline-none transition-colors">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        className="w-6 h-6"
-                      >
+                        className="w-6 h-6">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
