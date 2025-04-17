@@ -13,41 +13,36 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!token || !stock?.symbol) return;
+
       try {
         const balanceRes = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setBalance(balanceRes.data.balance);
+        setBalance(Number(balanceRes.data.balance) || 0);
 
         const holdingsRes = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const matched = holdingsRes.data.find((h) => h.symbol === stock.symbol);
-        setUserHoldings(matched ? matched.quantity : 0);
+        setUserHoldings(Number(matched?.quantity) || 0);
       } catch (err) {
-        setFeedback("Failed to load account info");
+        console.error("Failed to fetch sidebar data", err);
       }
     };
 
-    // Parse price safely
-    let parsed = 0;
-    if (stock) {
-      const raw = mode === "buy" ? stock.sell : stock.buy;
-      const cleaned = typeof raw === "string" ? raw.replace("$", "") : raw;
-      const num = parseFloat(cleaned);
-      parsed = isNaN(num) ? 0 : num;
-    }
-
-    setPrice(parsed);
     setFeedback("");
     setInvestAmount(0);
+
+    const extractedPrice = stock
+      ? parseFloat(
+          (mode === "buy" ? stock.sell : stock.buy)?.replace("$", "")
+        ) || 0
+      : 0;
+
+    setPrice(extractedPrice);
     fetchData();
   }, [stock, mode]);
 
@@ -66,33 +61,33 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
         return;
       }
 
-      if (mode === "buy") {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/holdings`,
-          {
-            symbol: stock.symbol,
-            name: stock.name,
-            quantity: roundedQty,
-            buy_price: price,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`,
-          { symbol: stock.symbol, quantity: roundedQty },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
+      const endpoint =
+        mode === "buy"
+          ? `${import.meta.env.VITE_API_BASE_URL}/api/holdings`
+          : `${import.meta.env.VITE_API_BASE_URL}/api/holdings/sell`;
+
+      const payload =
+        mode === "buy"
+          ? {
+              symbol: stock.symbol,
+              name: stock.name,
+              quantity: roundedQty,
+              buy_price: price,
+            }
+          : {
+              symbol: stock.symbol,
+              quantity: roundedQty,
+            };
+
+      await axios.post(endpoint, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       window.dispatchEvent(new Event("balanceUpdated"));
       onClose();
     } catch (err) {
       setFeedback("Transaction failed");
+      console.error(err);
     }
   };
 
@@ -122,10 +117,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
             }
             step="0.01"
             value={investAmount}
-            onChange={(e) => setInvestAmount(parseFloat(e.target.value))}
+            onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
             className="w-full"
           />
-
           <div className="text-sm mt-1">
             <p>
               {mode === "buy"
@@ -133,10 +127,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
                     Number.isFinite(investAmount)
                       ? investAmount.toFixed(2)
                       : "0.00"
-                  } = ${Number.isFinite(roundedQty) ? roundedQty : "0"} shares`
-                : `${
-                    Number.isFinite(roundedQty) ? roundedQty : "0"
-                  } shares = $${
+                  } = ${Number.isFinite(roundedQty) ? roundedQty : 0} shares`
+                : `${Number.isFinite(roundedQty) ? roundedQty : 0} shares = $${
                     Number.isFinite(roundedQty * price)
                       ? (roundedQty * price).toFixed(2)
                       : "0.00"
@@ -150,8 +142,10 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode }) => {
             {mode === "buy" ? "Balance" : "Holdings"}:{" "}
             <strong>
               {mode === "buy"
-                ? `$${balance?.toFixed(2) || "0.00"}`
-                : userHoldings}
+                ? `$${Number.isFinite(balance) ? balance.toFixed(2) : "0.00"}`
+                : Number.isFinite(userHoldings)
+                ? userHoldings
+                : 0}
             </strong>
           </p>
         </div>
