@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import TradeSidebar from "./TradeSidebar"; // ✅ Import your TradeSidebar
 import handleToggleFavorite from "./Dashboard";
+import toggleFavorite from "../slices/stocksSlice";
+import { useDispatch } from "react-redux";
 
 const Home = () => {
   const [stocks, setStocks] = useState([]);
@@ -34,6 +36,10 @@ const Home = () => {
     setTradeMode(null);
   };
 
+  const dispatch = useDispatch();
+  const handleToggleFavorite = (symbol, name, isCurrentlyFavorite) => {
+    dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
+  };
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4 text-center">Popular Stocks</h2>
@@ -74,7 +80,7 @@ const Home = () => {
                       stock.favorite
                     )
                   }
-                  className="focus:outline-none mx-auto block">
+                  className="w-6 h-6 text-yellow-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
