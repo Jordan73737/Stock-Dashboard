@@ -94,22 +94,31 @@ export const removeFavorite = createAsyncThunk(
   }
 );
 
-export const toggleFavorite = (symbol, name, isCurrentlyFavorite) => async (dispatch) => {
-  try {
-    console.log("Toggling favorite:", symbol, "Currently:", isCurrentlyFavorite);
-    if (isCurrentlyFavorite) {
-      await dispatch(removeFavorite(symbol)).unwrap();
-    } else {
-      await dispatch(addFavorite({ symbol, name })).unwrap();
+export const toggleFavorite =
+  (symbol, name, isCurrentlyFavorite) => async (dispatch) => {
+    try {
+      console.log(
+        "Toggling favorite:",
+        symbol,
+        "Currently:",
+        isCurrentlyFavorite
+      );
+      if (isCurrentlyFavorite) {
+        await dispatch(removeFavorite(symbol)).unwrap();
+      } else {
+        await dispatch(addFavorite({ symbol, name })).unwrap();
+      }
+
+      // ✅ Update Redux favorites so Home.jsx re-renders
+      await dispatch(fetchFavorites());
+    } catch (error) {
+      console.error("Toggle favorite failed:", error);
     }
-    dispatch(updateFavoriteStatus({ symbol, favorite: !isCurrentlyFavorite }));
-  } catch (error) {
-    console.error("Toggle favorite failed:", error);
-  }
-};
+  };
 
 const initialState = {
   stocks: [],
+  favorites: [],
   loading: false,
   error: null,
   searchResults: [],
@@ -163,7 +172,9 @@ const stocksSlice = createSlice({
       .addCase(fetchFavorites.fulfilled, (state, action) => {
         state.loading = false;
         state.stocks = action.payload;
+        state.favorites = action.payload;
       })
+
       .addCase(fetchFavorites.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
