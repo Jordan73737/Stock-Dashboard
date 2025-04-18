@@ -138,20 +138,12 @@ const Profile = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchHoldings = () => {
-      axios
-        .get(`${import.meta.env.VITE_API_BASE_URL}/api/holdings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => setHoldings(res.data))
-        .catch(console.error);
-    };
+    fetchProfileData(); // initial fetch
 
-    fetchHoldings(); // initial fetch
+    const listener = () => fetchProfileData();
+    window.addEventListener("holdingsUpdated", listener);
 
-    window.addEventListener("holdingsUpdated", fetchHoldings);
-
-    return () => window.removeEventListener("holdingsUpdated", fetchHoldings);
+    return () => window.removeEventListener("holdingsUpdated", listener);
   }, []);
 
   useEffect(() => {
