@@ -83,7 +83,7 @@ const Dashboard = () => {
       } finally {
         dispatch(setIsSearching(false));
       }
-    }, 500);
+    }, 2000);
 
     return () => clearTimeout(searchTimer);
   }, [searchQuery, dispatch]);
@@ -140,7 +140,7 @@ const Dashboard = () => {
         dispatch(
           updateStockHighlight({ id: stockToUpdate.id, highlight: false })
         );
-      }, 1000);
+      }, 3000);
     }, 5000);
 
     return () => clearInterval(updateInterval);
