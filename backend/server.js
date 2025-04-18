@@ -7,7 +7,7 @@ const { Pool } = require("pg");
 const dotenv = require("dotenv");
 const axios = require("axios");
 dotenv.config();
-
+const quoteCache = new Map();
 // Initialize Express app
 const app = express();
 const allowedOrigins = ["https://stock-dashboard-drab.vercel.app"];
@@ -271,7 +271,6 @@ app.get("/api/popular-stocks", async (req, res) => {
     "TSLA",
     "META",
     "NVDA",
-    "BRK.B",
     "JPM",
     "V",
     "UNH",
@@ -313,31 +312,43 @@ app.get("/api/popular-stocks", async (req, res) => {
   try {
     const results = await Promise.all(
       cleanSymbols.map(async (symbol) => {
+        const now = Date.now();
+        const cached = quoteCache.get(symbol);
+
+        // If cached and under 2 mins old, return it
+        if (cached && now - cached.timestamp < 120000) {
+          return cached.data;
+        }
+
         try {
-          const encodedSymbol = encodeURIComponent(symbol);
+          const encoded = encodeURIComponent(symbol);
           const quoteRes = await axios.get(
-            `https://finnhub.io/api/v1/quote?symbol=${encodedSymbol}&token=${process.env.FINNHUB_API_KEY}`
+            `https://finnhub.io/api/v1/quote?symbol=${encoded}&token=${process.env.FINNHUB_API_KEY}`
           );
 
           const price = quoteRes.data.c;
-
-          return {
+          const data = {
             name: nameMap[symbol] || symbol,
             symbol,
             change: quoteRes.data.dp?.toFixed(2) + "%" || "N/A",
             sell: `$${price?.toFixed(2) || "N/A"}`,
             buy: `$${(price + 1)?.toFixed(2) || "N/A"}`,
           };
-        } catch (innerErr) {
-          console.warn(`Skipping ${symbol}: ${innerErr.message}`);
+
+          // Cache it
+          quoteCache.set(symbol, { timestamp: now, data });
+
+          return data;
+        } catch (err) {
+          console.warn(`Skipping ${symbol}: ${err.message}`);
           return null;
         }
       })
     );
 
-    res.json(results.filter(Boolean)); // Remove nulls from failed fetches
+    res.json(results.filter(Boolean));
   } catch (err) {
-    console.error("Error fetching stocks from Finnhub:", err.message);
+    console.error("Error fetching stocks:", err.message);
     res.status(500).json({ error: "Failed to fetch stocks" });
   }
 });

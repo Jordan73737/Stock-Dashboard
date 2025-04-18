@@ -69,7 +69,10 @@ const Dashboard = () => {
           response.data.result.length > 0
         ) {
           const filteredResults = response.data.result
-            .filter((item) => item.type === "Common Stock")
+            .filter(
+              (item) =>
+                item.type === "Common Stock" && !item.symbol.includes(".")
+            )
             .slice(0, 5);
 
           dispatch(setSearchResults(filteredResults));
