@@ -202,15 +202,50 @@ app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
 });
 
 app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
-  const { symbol } = req.body;
+  const { symbol, quantity } = req.body;
+
   try {
-    await pool.query(
-      `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
+    // Get the existing holding
+    const result = await pool.query(
+      `SELECT quantity, buy_price FROM holdings WHERE user_id = $1 AND symbol = $2`,
       [req.user.id, symbol]
     );
-    res.json({ message: "Stock sold" });
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "You don't own this stock" });
+    }
+
+    const current = result.rows[0];
+
+    if (quantity > current.quantity) {
+      return res.status(400).json({ error: "Insufficient stock quantity" });
+    }
+
+    const proceeds = quantity * current.buy_price;
+
+    // Update or delete the holding
+    if (quantity === current.quantity) {
+      await pool.query(
+        `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
+        [req.user.id, symbol]
+      );
+    } else {
+      await pool.query(
+        `UPDATE holdings SET quantity = quantity - $1 WHERE user_id = $2 AND symbol = $3`,
+        [quantity, req.user.id, symbol]
+      );
+    }
+
+    // ✅ Update balance
+    await pool.query(`UPDATE users SET balance = balance + $1 WHERE id = $2`, [
+      proceeds,
+      req.user.id,
+    ]);
+
+    res.json({ message: "Stock sold", proceeds });
   } catch (err) {
-    res.status(500).json({ error: "Failed to sell stock" });
+    console.error(err);
+    res.status(500).json({ error: "Sell failed" });
   }
 });
 
