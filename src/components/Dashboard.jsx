@@ -58,7 +58,9 @@ const Dashboard = () => {
 
       try {
         const response = await axios.get(
-          `https://finnhub.io/api/v1/search?q=${searchQuery}&token=${API_KEY}`
+          `https://finnhub.io/api/v1/search?q=${encodeURIComponent(
+            searchQuery
+          )}&token=${API_KEY}`
         );
 
         if (
@@ -89,7 +91,11 @@ const Dashboard = () => {
   }, [searchQuery, dispatch]);
 
   const handleAddStock = async (symbol, name) => {
-    if (stocks.some((stock) => stock.symbol === symbol)) {
+    if (
+      stocks.some(
+        (stock) => stock.symbol.toUpperCase() === symbol.toUpperCase()
+      )
+    ) {
       alert(`${symbol} is already in your dashboard`);
       return;
     }
