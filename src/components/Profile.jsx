@@ -135,6 +135,24 @@ const Profile = () => {
   useEffect(() => {
     fetchProfileData();
   }, []);
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchHoldings = () => {
+      axios
+        .get(`${import.meta.env.VITE_API_BASE_URL}/api/holdings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => setHoldings(res.data))
+        .catch(console.error);
+    };
+
+    fetchHoldings(); // initial fetch
+
+    window.addEventListener("holdingsUpdated", fetchHoldings);
+
+    return () => window.removeEventListener("holdingsUpdated", fetchHoldings);
+  }, []);
 
   useEffect(() => {
     const handleBalanceUpdate = () => {

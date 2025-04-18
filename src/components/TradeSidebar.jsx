@@ -41,13 +41,15 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     const extractedPrice = stock
       ? parseFloat(
           (mode === "sell"
-            ? stock.currentPrice
+            ? stock.sell?.replace?.("$", "") // <-- fallback
             : stock.sell?.replace?.("$", "")) || 0
         )
       : 0;
 
     setPrice(extractedPrice);
     fetchData();
+    window.addEventListener("holdingsUpdated", fetchData);
+    return () => window.removeEventListener("holdingsUpdated", fetchData);
   }, [stock, mode]);
 
   const rawQty = useMemo(() => {
@@ -106,6 +108,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
       setSuccessMessage(msg);
       window.dispatchEvent(new Event("balanceUpdated"));
+      window.dispatchEvent(new Event("holdingsUpdated"));
       onSuccess?.(msg);
     } catch (err) {
       setFeedback("Transaction failed");

@@ -9,6 +9,7 @@ const Home = () => {
   const [visibleRows, setVisibleRows] = useState(10);
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeMode, setTradeMode] = useState(null);
+  const [holdings, setHoldings] = useState([]);
 
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.stocks.favorites || []);
@@ -50,6 +51,25 @@ const Home = () => {
     return () =>
       window.removeEventListener("balanceUpdated", handleBalanceUpdate);
   }, [dispatch]);
+
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchHoldings = () => {
+      axios
+        .get(`${import.meta.env.VITE_API_BASE_URL}/api/holdings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => setHoldings(res.data))
+        .catch(console.error);
+    };
+
+    fetchHoldings(); // initial fetch
+
+    window.addEventListener("holdingsUpdated", fetchHoldings);
+
+    return () => window.removeEventListener("holdingsUpdated", fetchHoldings);
+  }, []);
 
   // 1. Fetch stocks only once
   useEffect(() => {
