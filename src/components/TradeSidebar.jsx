@@ -115,6 +115,14 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
       console.error(err);
     }
   };
+  const sliderMax = useMemo(() => {
+    return mode === "buy" ? balance : userHoldings * price;
+  }, [mode, balance, userHoldings, price]);
+
+  const sliderStep = useMemo(() => {
+    // Allow fine granularity when holdings are small
+    return sliderMax < 10 ? 0.0001 : 0.01;
+  }, [sliderMax]);
 
   if (!isOpen || !stock) return null;
 
@@ -141,9 +149,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
           </label>
           <input
             type="range"
-            min="0"
-            max={Number(maxSliderValue)}
-            step="0.01"
+            min={0}
+            max={sliderMax}
+            step={sliderStep}
             value={Number(investAmount)}
             onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
             className="w-full"

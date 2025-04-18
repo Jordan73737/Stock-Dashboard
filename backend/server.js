@@ -274,15 +274,6 @@ app.get("/api/popular-stocks", async (req, res) => {
     "JPM",
     "V",
     "UNH",
-    "PG",
-    "XOM",
-    "HD",
-    "MA",
-    "PFE",
-    "BAC",
-    "KO",
-    "DIS",
-    "NFLX",
   ];
 
   const cleanSymbols = symbols.filter((sym) => !sym.includes(".")); // exclude dot symbol
@@ -298,15 +289,6 @@ app.get("/api/popular-stocks", async (req, res) => {
     JPM: "JPMorgan Chase & Co.",
     V: "Visa Inc.",
     UNH: "United Health Group Incorporated",
-    PG: "Procter & Gamble Company",
-    XOM: "Exxon Mobil Corporation",
-    HD: "The Home Depot, Inc.",
-    MA: "Mastercard Inc.",
-    PFE: "Pfizer Inc.",
-    BAC: "Bank of America Corporation",
-    KO: "Coca-Cola",
-    DIS: "The Walt Disney Company",
-    NFLX: "Netflix Inc.",
   };
 
   try {
