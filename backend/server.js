@@ -204,48 +204,75 @@ app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
 app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
   const { symbol, quantity } = req.body;
 
+  // ✅ Add this log to inspect incoming payload
+  console.log("🟡 Sell request received:", {
+    user: req.user.id,
+    symbol,
+    quantity,
+  });
+
+  if (!symbol || quantity === undefined || isNaN(quantity) || quantity <= 0) {
+    console.warn("❌ Invalid sell payload:", { symbol, quantity });
+    return res.status(400).json({ error: "Invalid sell request payload" });
+  }
+
   try {
-    // Get the existing holding
+    // ✅ Add log before fetching from DB
+    console.log("🔍 Fetching current holding for", symbol);
+
     const result = await pool.query(
       `SELECT quantity, buy_price FROM holdings WHERE user_id = $1 AND symbol = $2`,
       [req.user.id, symbol]
     );
 
     if (result.rows.length === 0) {
+      console.warn("⚠️ No holdings found for symbol:", symbol);
       return res.status(400).json({ error: "You don't own this stock" });
     }
 
     const current = result.rows[0];
 
     if (quantity > current.quantity) {
+      console.warn("⚠️ Trying to sell more than owned:", {
+        owned: current.quantity,
+        tryingToSell: quantity,
+      });
       return res.status(400).json({ error: "Insufficient stock quantity" });
     }
 
     const proceeds = quantity * current.buy_price;
 
-    // Update or delete the holding
+    // ✅ Log what's about to happen
+    console.log(
+      `🟢 Selling ${quantity} of ${symbol}, proceeds = $${proceeds.toFixed(2)}`
+    );
+
+    // Update or delete holding
     if (quantity === current.quantity) {
       await pool.query(
         `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
         [req.user.id, symbol]
       );
+      console.log(`🧹 Fully sold ${symbol}, holding deleted.`);
     } else {
       await pool.query(
         `UPDATE holdings SET quantity = quantity - $1 WHERE user_id = $2 AND symbol = $3`,
         [quantity, req.user.id, symbol]
       );
+      console.log(`✏️ Partially sold ${symbol}, updated remaining quantity.`);
     }
 
-    // ✅ Update balance
+    // ✅ Log balance update
     await pool.query(`UPDATE users SET balance = balance + $1 WHERE id = $2`, [
       proceeds,
       req.user.id,
     ]);
+    console.log(`💰 Balance updated: +$${proceeds.toFixed(2)}`);
 
     res.json({ message: "Stock sold", proceeds });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Sell failed" });
+    console.error("❌ Sell failed:", err.message, err.stack);
+    res.status(500).json({ error: "Sell failed", details: err.message });
   }
 });
 
