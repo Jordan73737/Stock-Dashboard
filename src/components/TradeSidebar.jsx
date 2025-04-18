@@ -41,8 +41,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     const extractedPrice = stock
       ? parseFloat(
           (mode === "sell"
-            ? stock.sell?.replace?.("$", "") // <-- fallback
-            : stock.sell?.replace?.("$", "")) || 0
+            ? stock.sell?.replace?.("£", "") // <-- fallback
+            : stock.sell?.replace?.("£", "")) || 0
         )
       : 0;
 
@@ -101,8 +101,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
         mode === "buy"
           ? `Purchased ${roundedQty} shares of ${
               stock.symbol
-            } for $${investAmount.toFixed(2)}`
-          : `${roundedQty} shares of ${stock.symbol} sold for $${(
+            } for £${investAmount.toFixed(2)}`
+          : `${roundedQty} shares of ${stock.symbol} sold for £${(
               roundedQty * price
             ).toFixed(2)}`;
 
@@ -145,8 +145,18 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
         <div className="mb-4">
           <label className="block font-medium mb-1">
-            {mode === "buy" ? "Investment Amount ($)" : "Amount to Sell"}
+            {mode === "buy" ? "Investment Amount (£)" : "Amount to Sell"}
           </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={investAmount}
+            onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
+            className="w-full border px-2 py-1 mb-2"
+            placeholder="Enter amount in £"
+          />
+
           <input
             type="range"
             min={0}
@@ -159,17 +169,11 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
           <div className="text-sm mt-1">
             <p>
-              {mode === "buy"
-                ? `$${
-                    Number.isFinite(investAmount)
-                      ? investAmount.toFixed(2)
-                      : "0.00"
-                  } = ${Number.isFinite(roundedQty) ? roundedQty : 0} shares`
-                : `${Number.isFinite(roundedQty) ? roundedQty : 0} shares = $${
-                    Number.isFinite(roundedQty * price)
-                      ? (roundedQty * price).toFixed(2)
-                      : "0.00"
-                  }`}
+              {Number.isFinite(roundedQty) && Number.isFinite(investAmount)
+                ? mode === "buy"
+                  ? `£${investAmount.toFixed(2)} = ${roundedQty} shares`
+                  : `${roundedQty} shares = £${(roundedQty * price).toFixed(2)}`
+                : ""}
             </p>
           </div>
         </div>
