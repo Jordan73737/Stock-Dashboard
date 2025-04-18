@@ -229,7 +229,15 @@ const Profile = () => {
 
                 <td className="py-2 px-4">
                   <button
-                    onClick={() => openTradeSidebar(stock, "sell")}
+                    onClick={() =>
+                      openTradeSidebar(
+                        {
+                          ...stock,
+                          sell: `$${Number(stock.currentPrice).toFixed(2)}`,
+                        },
+                        "sell"
+                      )
+                    }
                     className="bg-red-600 text-white px-3 py-1 rounded">
                     Sell
                   </button>
