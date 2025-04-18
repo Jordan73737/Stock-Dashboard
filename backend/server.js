@@ -239,29 +239,67 @@ app.get("/api/popular-stocks", async (req, res) => {
     "BRK.B",
     "JPM",
     "V",
+    "UNH",
+    "PG",
+    "XOM",
+    "HD",
+    "MA",
+    "PFE",
+    "BAC",
+    "KO",
+    "DIS",
+    "NFLX",
   ];
+
+  const nameMap = {
+    AAPL: "Apple Inc.",
+    MSFT: "Microsoft Corporation",
+    GOOGL: "Alphabet Inc.",
+    AMZN: "Amazon.com, Inc.",
+    TSLA: "Tesla, Inc.",
+    META: "Meta Platforms, Inc.",
+    NVDA: "NVIDIA Corporation",
+    "BRK.B": "Berkshire Hathaway Inc.",
+    JPM: "JPMorgan Chase & Co.",
+    V: "Visa Inc.",
+    UNH: "United Health Group Incorporated",
+    PG: "Procter & Gamble Company",
+    XOM: "Exxon Mobil Corporation",
+    HD: "The Home Depot, Inc.",
+    MA: "Mastercard Inc.",
+    PFE: "Pfizer Inc.",
+    BAC: "Bank of America Corporation",
+    KO: "Coca-Cola",
+    DIS: "The Walt Disney Company",
+    NFLX: "Netflix Inc.",
+  };
 
   try {
     const results = await Promise.all(
       symbols.map(async (symbol) => {
-        const quoteRes = await axios.get(
-          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_API_KEY}`
-        );
-        const profileRes = await axios.get(
-          `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${process.env.FINNHUB_API_KEY}`
-        );
+        try {
+          const encodedSymbol = encodeURIComponent(symbol);
+          const quoteRes = await axios.get(
+            `https://finnhub.io/api/v1/quote?symbol=${encodedSymbol}&token=${process.env.FINNHUB_API_KEY}`
+          );
 
-        return {
-          name: profileRes.data.name || symbol,
-          symbol,
-          change: quoteRes.data.dp?.toFixed(2) + "%" || "N/A",
-          sell: `$${quoteRes.data.c?.toFixed(2) || "N/A"}`,
-          buy: `$${(quoteRes.data.c + 1)?.toFixed(2) || "N/A"}`,
-        };
+          const price = quoteRes.data.c;
+
+          return {
+            name: nameMap[symbol] || symbol,
+            symbol,
+            change: quoteRes.data.dp?.toFixed(2) + "%" || "N/A",
+            sell: `$${price?.toFixed(2) || "N/A"}`,
+            buy: `$${(price + 1)?.toFixed(2) || "N/A"}`,
+          };
+        } catch (innerErr) {
+          console.warn(`Skipping ${symbol}: ${innerErr.message}`);
+          return null;
+        }
       })
     );
 
-    res.json(results);
+    res.json(results.filter(Boolean)); // Filter out any null (failed) results
   } catch (err) {
     console.error("Error fetching stocks from Finnhub:", err.message);
     res.status(500).json({ error: "Failed to fetch stocks" });
