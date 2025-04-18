@@ -57,7 +57,7 @@ const Navbar = () => {
             <>
               <span className="text-gray-600">Welcome, {email}</span>
               <span className="text-green-600 font-semibold">
-                Balance: $
+                Balance: £
                 {balance.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                 })}

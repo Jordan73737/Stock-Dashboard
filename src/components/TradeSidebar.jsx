@@ -57,15 +57,12 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
   }, [investAmount, price]);
 
   const roundedQty = useMemo(() => {
-    return Math.floor(rawQty * 10000) / 10000;
+    return Number(rawQty.toFixed(4));
   }, [rawQty]);
 
   const handleSubmit = async () => {
     try {
-      if (
-        mode === "buy" &&
-        (investAmount <= 0 || roundedQty <= 0 || roundedQty * price > balance)
-      ) {
+      if (mode === "buy" && (investAmount <= 0 || investAmount > balance)) {
         setFeedback("Insufficient funds or invalid amount.");
         return;
       }
