@@ -113,9 +113,10 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
       console.error(err);
     }
   };
-  const sliderMax = useMemo(() => {
-    return mode === "buy" ? balance : userHoldings * price;
-  }, [mode, balance, userHoldings, price]);
+  const extractedPrice = parseFloat(
+    stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
+  );
+  setPrice(isNaN(extractedPrice) ? 0 : extractedPrice);
 
   const sliderStep = useMemo(() => {
     // Allow fine granularity when holdings are small
@@ -167,7 +168,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
           <div className="text-sm mt-1">
             <p>
-              {Number.isFinite(roundedQty) && Number.isFinite(investAmount)
+              {Number.isFinite(roundedQty) &&
+              Number.isFinite(investAmount) &&
+              Number.isFinite(price)
                 ? mode === "buy"
                   ? `£${investAmount.toFixed(2)} = ${roundedQty} shares`
                   : `${roundedQty} shares = £${(roundedQty * price).toFixed(2)}`

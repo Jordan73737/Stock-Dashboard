@@ -1,4 +1,3 @@
-// Import required modules
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
@@ -8,30 +7,23 @@ const dotenv = require("dotenv");
 const axios = require("axios");
 dotenv.config();
 const quoteCache = new Map();
-// Initialize Express app
+
 const app = express();
 const allowedOrigins = ["https://stock-dashboard-drab.vercel.app"];
-// CORS browser security feature tells backend that its ok to fetch data for a different front domain (CORS prevents unauthorized cross-origin requests)
-// Adds response headers like:
-// Access-Control-Allow-Origin: https://stock-dashboard-drab.vercel.app
-// Access-Control-Allow-Credentials: true
 
-//Function call to use CORS middlewhere with settings: allow this origin to accept credentials
 app.use(
   cors({
     origin: allowedOrigins,
-    credentials: true, // cookies or headers are allowed
+    credentials: true,
   })
 );
 
 app.use(express.json());
 
-// Set up PostgreSQL database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Initialize database tables if they don't already exist
 async function initDatabase() {
   const client = await pool.connect();
   try {
@@ -40,7 +32,7 @@ async function initDatabase() {
         id SERIAL PRIMARY KEY,
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(100) NOT NULL,
-        balance NUMERIC DEFAULT 100000,  -- Default balance
+        balance NUMERIC DEFAULT 100000,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -54,14 +46,14 @@ async function initDatabase() {
       );
 
       CREATE TABLE IF NOT EXISTS holdings (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id),
-      symbol VARCHAR(20) NOT NULL,
-      name VARCHAR(100) NOT NULL,
-      quantity NUMERIC NOT NULL,  -- ✅ was INTEGER
-      buy_price NUMERIC NOT NULL, -- ✅ was likely fine
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user_id, symbol)
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        symbol VARCHAR(20) NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        quantity NUMERIC NOT NULL,
+        buy_price NUMERIC NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, symbol)
       );
     `);
   } finally {
@@ -123,8 +115,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// ---------------------- AUTH MIDDLEWARE ---------------------- //
-
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -176,9 +166,14 @@ app.delete("/api/favorites/:symbol", authenticateToken, async (req, res) => {
   }
 });
 
+// ---------------------- HOLDINGS API ---------------------- //
+
 app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
   const { symbol, name, quantity, buy_price } = req.body;
+
   try {
+    const totalCost = quantity * buy_price;
+
     await pool.query(
       `INSERT INTO holdings (user_id, symbol, name, quantity, buy_price)
        VALUES ($1, $2, $3, $4, $5)
@@ -187,8 +182,6 @@ app.post("/api/holdings/buy", authenticateToken, async (req, res) => {
       [req.user.id, symbol, name, quantity, buy_price]
     );
 
-    // Deduct balance too
-    const totalCost = quantity * buy_price;
     await pool.query(`UPDATE users SET balance = balance - $1 WHERE id = $2`, [
       totalCost,
       req.user.id,
@@ -205,7 +198,6 @@ app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
   const { symbol, quantity } = req.body;
 
   try {
-    // Get the existing holding
     const result = await pool.query(
       `SELECT quantity, buy_price FROM holdings WHERE user_id = $1 AND symbol = $2`,
       [req.user.id, symbol]
@@ -216,14 +208,12 @@ app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
     }
 
     const current = result.rows[0];
-
     if (quantity > current.quantity) {
       return res.status(400).json({ error: "Insufficient stock quantity" });
     }
 
     const proceeds = quantity * current.buy_price;
 
-    // Update or delete the holding
     if (quantity === current.quantity) {
       await pool.query(
         `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
@@ -236,7 +226,6 @@ app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
       );
     }
 
-    // ✅ Update balance
     await pool.query(`UPDATE users SET balance = balance + $1 WHERE id = $2`, [
       proceeds,
       req.user.id,
@@ -386,19 +375,6 @@ app.post("/api/holdings", authenticateToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to buy stock" });
-  }
-});
-
-// Get holdings
-app.get("/api/holdings", authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT * FROM holdings WHERE user_id = $1`,
-      [req.user.id]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to get holdings" });
   }
 });
 
