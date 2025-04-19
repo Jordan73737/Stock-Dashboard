@@ -159,7 +159,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
           <input
             type="range"
             min={0}
-            max={sliderMax}
+            max={maxSliderValue}
             step={sliderStep}
             value={Number(investAmount)}
             onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
