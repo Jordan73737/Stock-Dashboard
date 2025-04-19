@@ -38,11 +38,11 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     setInvestAmount(0);
     setSuccessMessage("");
 
-    const extractedPrice = parseFloat(
+    const extracted = parseFloat(
       stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
     );
+    setPrice(isNaN(extracted) ? 0 : extracted);
 
-    setPrice(extractedPrice);
     fetchData();
     window.addEventListener("holdingsUpdated", fetchData);
     return () => window.removeEventListener("holdingsUpdated", fetchData);
@@ -56,6 +56,18 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     return parseFloat((rawQty || 0).toFixed(4));
   }, [rawQty]);
 
+  const maxSliderValue = useMemo(() => {
+    return mode === "buy"
+      ? balance
+      : userHoldings > 0 && price > 0
+      ? userHoldings * price
+      : 0;
+  }, [mode, balance, userHoldings, price]);
+
+  const sliderStep = useMemo(() => {
+    return maxSliderValue < 10 ? 0.0001 : 0.01;
+  }, [maxSliderValue]);
+
   const handleSubmit = async () => {
     try {
       if (!price || isNaN(price)) {
@@ -68,7 +80,10 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
         return;
       }
 
-      if (mode === "sell" && (roundedQty <= 0 || roundedQty > userHoldings)) {
+      if (
+        mode === "sell" &&
+        (roundedQty < 0.0001 || roundedQty > userHoldings)
+      ) {
         setFeedback("You don't own that many or quantity is invalid.");
         return;
       }
@@ -113,23 +128,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
       console.error(err);
     }
   };
-  const extractedPrice = parseFloat(
-    stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
-  );
-  setPrice(isNaN(extractedPrice) ? 0 : extractedPrice);
 
-  const maxSliderValue =
-    mode === "buy"
-      ? balance > 0
-        ? balance.toFixed(2)
-        : 0
-      : userHoldings > 0 && price > 0
-      ? (userHoldings * price).toFixed(2)
-      : 0;
-  const sliderStep = useMemo(() => {
-    // Allow fine granularity when holdings are small
-    return maxSliderValue < 10 ? 0.0001 : 0.01;
-  }, [maxSliderValue]);
   if (!isOpen || !stock) return null;
 
   return (
@@ -159,7 +158,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
             min={0}
             max={maxSliderValue}
             step={sliderStep}
-            value={Number(investAmount)}
+            value={investAmount}
             onChange={(e) => setInvestAmount(parseFloat(e.target.value) || 0)}
             className="w-full"
           />
@@ -182,7 +181,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
             {mode === "buy" ? "Balance" : "Holdings"}:{" "}
             <strong>
               {mode === "buy"
-                ? `$${Number.isFinite(balance) ? balance.toFixed(2) : "0.00"}`
+                ? `£${Number.isFinite(balance) ? balance.toFixed(2) : "0.00"}`
                 : Number.isFinite(userHoldings)
                 ? userHoldings
                 : 0}
@@ -201,7 +200,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
           onClick={handleSubmit}
           className={`w-full py-2 rounded text-white mt-2 ${
             (mode === "buy" && (investAmount > balance || investAmount <= 0)) ||
-            (mode === "sell" && (roundedQty > userHoldings || roundedQty <= 0))
+            (mode === "sell" &&
+              (roundedQty > userHoldings || roundedQty < 0.0001))
               ? "bg-gray-400 cursor-not-allowed"
               : mode === "buy"
               ? "bg-blue-600 hover:bg-blue-700"
