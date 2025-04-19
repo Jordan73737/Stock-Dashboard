@@ -21,11 +21,6 @@ const Profile = () => {
     setTradeMode(null);
   };
 
-  const handleSidebarSuccess = (msg) => {
-    setSuccessMessage(msg);
-    fetchProfileData(); // Refresh holdings/balance
-  };
-
   const fetchProfileData = async () => {
     const token = localStorage.getItem("token");
     setLoading(true);
@@ -135,7 +130,6 @@ const Profile = () => {
   useEffect(() => {
     fetchProfileData();
   }, []);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchProfileData(); // initial fetch
@@ -252,7 +246,12 @@ const Profile = () => {
         onClose={closeSidebar}
         stock={selectedStock}
         mode={tradeMode}
-        onSuccess={handleSidebarSuccess}
+        onSuccess={(msg) => {
+          console.log(msg);
+          setSuccessMessage(msg);
+          fetchProfileData();
+          window.dispatchEvent(new Event("balanceUpdated")); // Triggers profile/home update
+        }}
       />
     </div>
   );
