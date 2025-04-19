@@ -118,13 +118,6 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
   );
   setPrice(isNaN(extractedPrice) ? 0 : extractedPrice);
 
-  const sliderStep = useMemo(() => {
-    // Allow fine granularity when holdings are small
-    return maxSliderValue < 10 ? 0.0001 : 0.01;
-  }, [maxSliderValue]);
-
-  if (!isOpen || !stock) return null;
-
   const maxSliderValue =
     mode === "buy"
       ? balance > 0
@@ -133,6 +126,11 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
       : userHoldings > 0 && price > 0
       ? (userHoldings * price).toFixed(2)
       : 0;
+  const sliderStep = useMemo(() => {
+    // Allow fine granularity when holdings are small
+    return maxSliderValue < 10 ? 0.0001 : 0.01;
+  }, [maxSliderValue]);
+  if (!isOpen || !stock) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
