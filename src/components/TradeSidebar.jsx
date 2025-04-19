@@ -29,6 +29,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
         const matched = holdingsRes.data.find((h) => h.symbol === stock.symbol);
         setUserHoldings(Number(matched?.quantity) || 0);
+        console.log(stock.symbol);
+        console.log(userHoldings);
       } catch (err) {
         console.error("Failed to fetch sidebar data", err);
       }
@@ -41,6 +43,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     const extracted = parseFloat(
       stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
     );
+    console.log(extracted);
     setPrice(isNaN(extracted) ? 0 : extracted);
 
     fetchData();
