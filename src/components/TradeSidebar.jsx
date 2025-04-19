@@ -43,6 +43,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     const extracted = parseFloat(
       stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
     );
+    console.log(stock);
     console.log(extracted);
     setPrice(isNaN(extracted) ? 0 : extracted);
 
