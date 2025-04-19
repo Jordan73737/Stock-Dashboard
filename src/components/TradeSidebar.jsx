@@ -41,7 +41,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     setSuccessMessage("");
 
     const extracted = parseFloat(
-      stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
+      stock?.sell?.replace(/[$£]/g, "") || stock?.currentPrice || 0
     );
     console.log(stock);
     console.log(extracted);
