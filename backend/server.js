@@ -214,7 +214,7 @@ app.post("/api/holdings/sell", authenticateToken, async (req, res) => {
 
     const proceeds = quantity * current.buy_price;
 
-    if (quantity === current.quantity) {
+    if (current.quantity - quantity < 0.0001) {
       await pool.query(
         `DELETE FROM holdings WHERE user_id = $1 AND symbol = $2`,
         [req.user.id, symbol]
