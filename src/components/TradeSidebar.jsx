@@ -38,12 +38,10 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     setInvestAmount(0);
     setSuccessMessage("");
 
-    const extractedPrice = stock
-      ? parseFloat(
-          (mode === "sell"
-            ? stock.sell?.replace?.("£", "") // <-- fallback
-            : stock.sell?.replace?.("£", "")) || 0
-        )
+    const extractedPrice = stock?.sell
+      ? parseFloat(stock.sell.replace("£", ""))
+      : stock?.currentPrice
+      ? parseFloat(stock.currentPrice)
       : 0;
 
     setPrice(extractedPrice);
@@ -57,7 +55,7 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
   }, [investAmount, price]);
 
   const roundedQty = useMemo(() => {
-    return Number(rawQty.toFixed(4));
+    return parseFloat((rawQty || 0).toFixed(4));
   }, [rawQty]);
 
   const handleSubmit = async () => {
@@ -207,7 +205,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
           }`}
           disabled={
             (mode === "buy" && (investAmount > balance || investAmount <= 0)) ||
-            (mode === "sell" && (roundedQty > userHoldings || roundedQty <= 0))
+            (mode === "sell" &&
+              (roundedQty > userHoldings || roundedQty < 0.0001))
           }>
           Confirm {mode === "buy" ? "Purchase" : "Sale"}
         </button>
