@@ -120,8 +120,8 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
   const sliderStep = useMemo(() => {
     // Allow fine granularity when holdings are small
-    return sliderMax < 10 ? 0.0001 : 0.01;
-  }, [sliderMax]);
+    return maxSliderValue < 10 ? 0.0001 : 0.01;
+  }, [maxSliderValue]);
 
   if (!isOpen || !stock) return null;
 
