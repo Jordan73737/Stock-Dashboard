@@ -155,7 +155,7 @@ const Profile = () => {
       <h2 className="text-2xl font-bold mb-4">Your Profile</h2>
       <div className="mb-4">
         <p className="mb-2 font-medium">
-          Current Balance: £{Number(balance || 0).toFixed(2)}
+          Current Balance: ${Number(balance || 0).toFixed(2)}
         </p>
 
         <input
@@ -205,10 +205,10 @@ const Profile = () => {
                 <td className="py-2 px-4">{stock.name}</td>
                 <td className="py-2 px-4">{stock.quantity}</td>
                 <td className="py-2 px-4">
-                  £{Number(stock.buy_price).toFixed(2)}
+                  ${Number(stock.buy_price).toFixed(2)}
                 </td>
                 <td className="py-2 px-4">
-                  £{Number(stock.currentPrice).toFixed(2)}
+                  ${Number(stock.currentPrice).toFixed(2)}
                 </td>
                 <td
                   className={`py-2 px-4 font-semibold ${
@@ -218,7 +218,7 @@ const Profile = () => {
                       ? "text-red-600"
                       : "text-gray-600"
                   }`}>
-                  £{Number(stock.profitLoss).toFixed(2)}
+                  ${Number(stock.profitLoss).toFixed(2)}
                 </td>
 
                 <td className="py-2 px-4">
@@ -227,7 +227,7 @@ const Profile = () => {
                       openTradeSidebar(
                         {
                           ...stock,
-                          sell: `£${Number(stock.currentPrice).toFixed(2)}`,
+                          sell: `$${Number(stock.currentPrice).toFixed(2)}`,
                         },
                         "sell"
                       )
