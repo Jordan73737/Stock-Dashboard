@@ -38,11 +38,9 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
     setInvestAmount(0);
     setSuccessMessage("");
 
-    const extractedPrice = stock?.sell
-      ? parseFloat(stock.sell.replace("£", ""))
-      : stock?.currentPrice
-      ? parseFloat(stock.currentPrice)
-      : 0;
+    const extractedPrice = parseFloat(
+      stock?.sell?.replace?.("$", "") || stock?.currentPrice || 0
+    );
 
     setPrice(extractedPrice);
     fetchData();
@@ -60,6 +58,11 @@ const TradeSidebar = ({ isOpen, onClose, stock, mode, onSuccess }) => {
 
   const handleSubmit = async () => {
     try {
+      if (!price || isNaN(price)) {
+        setFeedback("Invalid stock price. Please try again later.");
+        return;
+      }
+
       if (mode === "buy" && (investAmount <= 0 || investAmount > balance)) {
         setFeedback("Insufficient funds or invalid amount.");
         return;
