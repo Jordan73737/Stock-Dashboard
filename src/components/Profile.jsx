@@ -10,6 +10,7 @@ const Profile = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeMode, setTradeMode] = useState(null);
+  const [depositMessage, setDepositMessage] = useState("");
 
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
@@ -99,6 +100,7 @@ const Profile = () => {
       }
 
       setInputBalance(""); // Clear the input
+      setDepositMessage(`Successfully deposited $${depositAmount.toFixed(2)}`);
       window.dispatchEvent(new Event("balanceUpdated"));
       fetchProfileData(); // Refresh balance on screen
     } catch (err) {
@@ -172,6 +174,9 @@ const Profile = () => {
           className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
           Deposit
         </button>
+        {depositMessage && (
+          <p className="text-green-600 mt-2 text-sm">{depositMessage}</p>
+        )}
       </div>
       {successMessage && (
         <p className="text-green-600 mb-4 text-center font-medium">
