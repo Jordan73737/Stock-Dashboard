@@ -11,6 +11,8 @@ const Profile = () => {
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeMode, setTradeMode] = useState(null);
   const [depositMessage, setDepositMessage] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawMessage, setWithdrawMessage] = useState("");
 
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
@@ -109,6 +111,40 @@ const Profile = () => {
     }
   };
 
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setWithdrawMessage("Please enter a positive number.");
+      return;
+    }
+
+    if (amount > balance) {
+      setWithdrawMessage("Insufficient funds to withdraw.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      // Subtract from balance
+      const newBalance = Number(balance) - amount;
+
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/balance`,
+        { balance: newBalance },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setWithdrawAmount(""); // Clear input
+      setWithdrawMessage(`Successfully withdrew £${amount.toFixed(2)}`);
+      setBalance(newBalance); // Update UI state
+      window.dispatchEvent(new Event("balanceUpdated"));
+    } catch (err) {
+      console.error("Failed to withdraw funds", err);
+      setWithdrawMessage("Failed to withdraw. Try again.");
+    }
+  };
+
   // Already Using The Sidebar To Handle Selling
   // const handleSell = async (symbol) => {
   //   const token = localStorage.getItem("token");
@@ -155,29 +191,56 @@ const Profile = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Your Profile</h2>
-      <div className="mb-4">
-        <p className="mb-2 font-medium">
-          Current Balance: ${Number(balance || 0).toFixed(2)}
-        </p>
 
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={inputBalance}
-          onChange={(e) => setInputBalance(e.target.value)}
-          placeholder="Enter deposit amount"
-          className="border px-2 py-1 mr-2"
-        />
-        <button
-          onClick={handleDeposit}
-          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-          Deposit
-        </button>
-        {depositMessage && (
-          <p className="text-green-600 mt-2 text-sm">{depositMessage}</p>
-        )}
+      {/* Deposit + Withdraw Row */}
+      <div className="flex flex-wrap items-start gap-4 mb-4">
+        {/* Deposit Section */}
+        <div>
+          <p className="mb-2 font-medium">
+            Current Balance: £{Number(balance || 0).toFixed(2)}
+          </p>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={inputBalance}
+            onChange={(e) => setInputBalance(e.target.value)}
+            placeholder="Enter deposit amount"
+            className="border px-2 py-1 mr-2"
+          />
+          <button
+            onClick={handleDeposit}
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+            Deposit
+          </button>
+          {depositMessage && (
+            <p className="text-green-600 mt-2 text-sm">{depositMessage}</p>
+          )}
+        </div>
+
+        {/* Withdraw Section */}
+        <div>
+          <p className="mb-2 font-medium invisible">Spacer</p>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            placeholder="Enter withdraw amount"
+            className="border px-2 py-1 mr-2"
+          />
+          <button
+            onClick={handleWithdraw}
+            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
+            Withdraw
+          </button>
+          {withdrawMessage && (
+            <p className="text-red-600 mt-2 text-sm">{withdrawMessage}</p>
+          )}
+        </div>
       </div>
+
       {successMessage && (
         <p className="text-green-600 mb-4 text-center font-medium">
           {successMessage}
