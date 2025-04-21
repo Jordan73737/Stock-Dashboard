@@ -4,28 +4,40 @@ import TradeSidebar from "./TradeSidebar";
 import { toggleFavorite, fetchFavorites } from "../slices/stocksSlice";
 import { useDispatch, useSelector } from "react-redux";
 
+// This component shows the main "Popular Stocks" screen with buying/selling and favoriting
 const Home = () => {
+  // State to hold fetched stock data
   const [rawStocks, setRawStocks] = useState([]);
+
+  // How many rows (stocks) to show in the table
   const [visibleRows, setVisibleRows] = useState(10);
+
+  // Currently selected stock for trading (buy/sell)
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeMode, setTradeMode] = useState(null);
+
+  // User's holdings (used for advanced features or display)
   const [holdings, setHoldings] = useState([]);
 
+  // Redux setup to handle favorites
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.stocks.favorites || []);
+
+  // Log favorites whenever they update
   useEffect(() => {
     console.log("Favorites updated in Redux:", favorites);
   }, [favorites]);
 
-  // Listens for balanceUpdated
+  // Listen for balance updates (e.g., after a trade) and optionally refresh
   useEffect(() => {
     const updateBalance = async () => {
-      // Refetch or update UI state
+      // You could add logic here to refresh balance or other UI updates
     };
     window.addEventListener("balanceUpdated", updateBalance);
     return () => window.removeEventListener("balanceUpdated", updateBalance);
   }, []);
 
+  // Fetch popular stock data from the backend
   const fetchPopularStocks = async () => {
     try {
       const response = await axios.get(
@@ -37,10 +49,12 @@ const Home = () => {
     }
   };
 
+  // Fetch stock data on first component load
   useEffect(() => {
     fetchPopularStocks();
   }, []);
 
+  // Re-fetch popular stocks and favorites when balance changes
   useEffect(() => {
     const handleBalanceUpdate = () => {
       fetchPopularStocks();
@@ -52,8 +66,10 @@ const Home = () => {
       window.removeEventListener("balanceUpdated", handleBalanceUpdate);
   }, [dispatch]);
 
+  // Get auth token from localStorage
   const token = localStorage.getItem("token");
 
+  // Fetch the user's current holdings
   useEffect(() => {
     const fetchHoldings = () => {
       axios
@@ -66,12 +82,13 @@ const Home = () => {
 
     fetchHoldings(); // initial fetch
 
+    // Refresh holdings whenever "holdingsUpdated" event is fired
     window.addEventListener("holdingsUpdated", fetchHoldings);
 
     return () => window.removeEventListener("holdingsUpdated", fetchHoldings);
   }, []);
 
-  // 1. Fetch stocks only once
+  // Duplicate fetch of popular stocks on mount — could be removed for optimization
   useEffect(() => {
     const fetchStocks = async () => {
       try {
@@ -87,27 +104,30 @@ const Home = () => {
     fetchStocks();
   }, []);
 
-  // 2. Fetch favorites only once
+  // Fetch favorites from Redux when component loads
   useEffect(() => {
     dispatch(fetchFavorites());
   }, [dispatch]);
 
-  // 3. Combine stocks and favorite status
+  // Add `favorite: true/false` to each stock based on user's favorites
   const enrichedStocks = rawStocks.map((stock) => ({
     ...stock,
     favorite: favorites.some((f) => f.symbol === stock.symbol),
   }));
 
+  // Trigger the sidebar to open with the selected stock and mode (buy/sell)
   const openTradeSidebar = (stock, mode) => {
     setSelectedStock(stock);
     setTradeMode(mode);
   };
 
+  // Close the trade sidebar
   const closeSidebar = () => {
     setSelectedStock(null);
     setTradeMode(null);
   };
 
+  // Toggle a stock as a favorite/unfavorite
   const handleToggleFavorite = async (symbol, name, isCurrentlyFavorite) => {
     console.log(
       "Toggling favorite:",
@@ -116,13 +136,14 @@ const Home = () => {
       isCurrentlyFavorite
     );
     await dispatch(toggleFavorite(symbol, name, isCurrentlyFavorite));
-    await dispatch(fetchFavorites()); // ensures enrichedStocks gets new data
+    await dispatch(fetchFavorites()); // refresh UI
   };
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4 text-center">Popular Stocks</h2>
 
+      {/* Stock Table */}
       <table className="w-full text-sm border">
         <thead className="bg-gray-200">
           <tr>
@@ -141,16 +162,19 @@ const Home = () => {
               <td className="py-2 px-4">{stock.sell}</td>
               <td className="py-2 px-4">{stock.buy}</td>
               <td className="py-2 px-4 space-x-2">
+                {/* Buy Button */}
                 <button
                   onClick={() => openTradeSidebar(stock, "buy")}
                   className="bg-green-600 text-white px-2 py-1 rounded">
                   Buy
                 </button>
+                {/* Sell Button */}
                 <button
                   onClick={() => openTradeSidebar(stock, "sell")}
                   className="bg-red-600 text-white px-2 py-1 rounded">
                   Sell
                 </button>
+                {/* Favorite Toggle */}
                 <button
                   onClick={() =>
                     handleToggleFavorite(
@@ -182,6 +206,7 @@ const Home = () => {
         </tbody>
       </table>
 
+      {/* Sidebar for trading stocks */}
       <TradeSidebar
         isOpen={!!selectedStock}
         onClose={closeSidebar}
@@ -189,7 +214,7 @@ const Home = () => {
         mode={tradeMode}
         onSuccess={(msg) => {
           console.log(msg);
-          window.dispatchEvent(new Event("balanceUpdated")); // Triggers profile/home update
+          window.dispatchEvent(new Event("balanceUpdated")); // triggers refresh
         }}
       />
     </div>
