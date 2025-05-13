@@ -4,7 +4,7 @@ import axios from "axios";
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
-const FINNHUB_API_KEY = "cv9n049r01qpd9s86e70cv9n049r01qpd9s86e7g";
+const FINNHUB_API_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
 
 export const fetchFavorites = createAsyncThunk(
   "stocks/fetchFavorites",

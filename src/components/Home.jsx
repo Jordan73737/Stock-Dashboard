@@ -88,7 +88,6 @@ const Home = () => {
     return () => window.removeEventListener("holdingsUpdated", fetchHoldings);
   }, []);
 
-  // Duplicate fetch of popular stocks on mount — could be removed for optimization
   useEffect(() => {
     const fetchStocks = async () => {
       try {
