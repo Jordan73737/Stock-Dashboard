@@ -27,7 +27,7 @@ const Dashboard = () => {
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef(null);
 
-  const API_KEY = "cv9n049r01qpd9s86e70cv9n049r01qpd9s86e7g";
+  const API_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
 
   useEffect(() => {
     dispatch(fetchFavorites());
