@@ -1,4 +1,4 @@
-// Import PostgreSQL client pool to interact with the database
+// Just importing the Pool class from pg - so the PostgreSQL client pool can interact with the database
 const { Pool } = require("pg");
 
 // Import bcrypt for hashing passwords
@@ -16,6 +16,7 @@ const pool = new Pool({
 // This function fetches a user from the database by their email address
 async function getUserByEmail(email) {
   // SQL query to select the user where email matches the parameter
+  // Basically telling SQL - Run this and wherever you see the $1 placeholder value, put in the email (safely - prevents SQL injection)
   const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
 
   // Return the first matching user (if any)
