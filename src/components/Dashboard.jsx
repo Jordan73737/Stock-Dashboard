@@ -237,7 +237,7 @@ const Dashboard = () => {
               <tr className="bg-gray-200">
                 <th className="py-3 px-4 text-left">Company</th>
                 <th className="py-3 px-4 text-right">Price</th>
-                <th className="py-3 px-4 text-right">Change</th>
+                <th className="py-3 px-4 text-right">Change %</th>
                 <th className="py-3 px-4 text-center">Favorite</th>
                 <th className="py-3 px-4 text-center">Remove</th>
               </tr>
