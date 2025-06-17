@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import TradeSidebar from "./TradeSidebar";
+import ValueHistoryChart from "./ValueHistoryChart";
 
 const Profile = () => {
   const [balance, setBalance] = useState(0);
@@ -309,6 +310,7 @@ const Profile = () => {
           </tbody>
         </table>
       )}
+      <ValueHistoryChart filter="daily" />
       <TradeSidebar
         isOpen={!!selectedStock}
         onClose={closeSidebar}

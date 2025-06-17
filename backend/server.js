@@ -55,6 +55,15 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, symbol)
       );
+
+      CREATE TABLE IF NOT EXISTS User_Value_History (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        balance NUMERIC NOT NULL,
+        investments NUMERIC NOT NULL,
+        total_value NUMERIC NOT NULL,
+        recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
   } finally {
     client.release();
@@ -425,6 +434,76 @@ app.post("/api/sell", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Sell failed" });
   }
 });
+
+// ---------------------- Daily Value Calculations ---------------------- //
+
+
+async function recordDailyUserValues() {
+  const users = await pool.query("SELECT id, balance FROM users");
+
+  for (const user of users.rows) {
+    const holdings = await pool.query(
+      "SELECT symbol, quantity FROM holdings WHERE user_id = $1",
+      [user.id]
+    );
+
+    let totalInvestments = 0;
+
+    for (const h of holdings.rows) {
+      try {
+        const quoteRes = await axios.get(
+          `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(h.symbol)}&token=${process.env.FINNHUB_API_KEY}`
+        );
+        const currentPrice = quoteRes.data.c;
+        totalInvestments += currentPrice * h.quantity;
+      } catch (err) {
+        console.warn(`Price fetch failed for ${h.symbol}: ${err.message}`);
+      }
+    }
+
+    const totalValue = Number(user.balance) + totalInvestments;
+
+    await pool.query(
+      `INSERT INTO User_Value_History (user_id, balance, investments, total_value)
+       VALUES ($1, $2, $3, $4)`,
+      [user.id, user.balance, totalInvestments, totalValue]
+    );
+  }
+}
+// ---------------------- Daily Value Calculations Route---------------------- //
+
+app.post("/api/run-daily-snapshot", async (req, res) => {
+  try {
+    await recordDailyUserValues();
+    res.json({ message: "User values recorded successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Snapshot failed" });
+  }
+});
+
+
+app.get("/api/user-history", authenticateToken, async (req, res) => {
+  const filter = req.query.filter || "daily"; // daily/monthly/yearly
+
+  let groupClause = "DATE_TRUNC('day', recorded_at)";
+  if (filter === "monthly") groupClause = "DATE_TRUNC('month', recorded_at)";
+  else if (filter === "yearly") groupClause = "DATE_TRUNC('year', recorded_at)";
+
+  const result = await pool.query(
+    `SELECT ${groupClause} as date, AVG(total_value) as avg_value
+     FROM User_Value_History
+     WHERE user_id = $1
+     GROUP BY date
+     ORDER BY date`,
+    [req.user.id]
+  );
+
+  res.json(result.rows);
+});
+
+
+
 
 // ---------------------- PASSWORD RESET ---------------------- //
 
