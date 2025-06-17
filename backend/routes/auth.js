@@ -78,39 +78,6 @@ router.post("/reset-password/:token", async (req, res) => {
   }
 });
 
-// ---------------------- Daily Value Calculations Route---------------------- //
-
-app.post("/api/run-daily-snapshot", async (req, res) => {
-  try {
-    await recordDailyUserValues();
-    res.json({ message: "User values recorded successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Snapshot failed" });
-  }
-});
-
-
-app.get("/api/user-history", authenticateToken, async (req, res) => {
-  const filter = req.query.filter || "daily"; // daily/monthly/yearly
-
-  let groupClause = "DATE_TRUNC('day', recorded_at)";
-  if (filter === "monthly") groupClause = "DATE_TRUNC('month', recorded_at)";
-  else if (filter === "yearly") groupClause = "DATE_TRUNC('year', recorded_at)";
-
-  const result = await pool.query(
-    `SELECT ${groupClause} as date, AVG(total_value) as avg_value
-     FROM User_Value_History
-     WHERE user_id = $1
-     GROUP BY date
-     ORDER BY date`,
-    [req.user.id]
-  );
-
-  res.json(result.rows);
-});
-
-
 
 
 
