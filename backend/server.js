@@ -437,7 +437,6 @@ app.post("/api/sell", authenticateToken, async (req, res) => {
 
 // ---------------------- Daily Value Calculations ---------------------- //
 
-
 async function recordDailyUserValues() {
   try {
     const users = await pool.query("SELECT id, balance FROM users");

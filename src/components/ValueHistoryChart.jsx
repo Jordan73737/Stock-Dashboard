@@ -25,7 +25,7 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
             },
           }
         );
-
+        console.log("Raw value history data:", res.data);
         // Validate the response before mapping
         if (!Array.isArray(res.data)) {
           console.warn("Expected array but got:", res.data);
