@@ -9,7 +9,10 @@ dotenv.config();
 const quoteCache = new Map();
 
 const app = express();
-const allowedOrigins = ["https://stock-dashboard-drab.vercel.app"];
+const allowedOrigins = [
+  "https://stock-dashboard-drab.vercel.app",
+  "https://stock-dashboard-1np2vyrls-jordans-projects-b4ff0ac6.vercel.app",
+];
 
 app.use(
   cors({
@@ -526,21 +529,13 @@ app.post("/api/run-daily-snapshot", async (req, res) => {
 
 
 app.get("/api/user-history", authenticateToken, async (req, res) => {
-  const filter = req.query.filter || "daily"; // daily/monthly/yearly
-
-  let groupClause = "DATE_TRUNC('day', recorded_at)";
-  if (filter === "monthly") groupClause = "DATE_TRUNC('month', recorded_at)";
-  else if (filter === "yearly") groupClause = "DATE_TRUNC('year', recorded_at)";
-
   const result = await pool.query(
-    `SELECT ${groupClause} as date, AVG(total_value) as avg_value
+    `SELECT recorded_at as date, total_value
      FROM User_Value_History
      WHERE user_id = $1
-     GROUP BY date
-     ORDER BY date`,
+     ORDER BY recorded_at`,
     [req.user.id]
   );
-  console.log("User history response:", result.rows);
   res.json(result.rows);
 });
 
