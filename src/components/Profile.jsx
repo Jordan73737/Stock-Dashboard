@@ -25,6 +25,19 @@ const Profile = () => {
     setTradeMode(null);
   };
 
+  const triggerSnapshot = async () => {
+  try {
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/run-daily-snapshot`, {}, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+  } catch (err) {
+    console.warn("Snapshot trigger failed", err);
+  }
+};
+
+
   const fetchProfileData = async () => {
     const token = localStorage.getItem("token");
     setLoading(true);
@@ -104,6 +117,9 @@ const Profile = () => {
 
       setInputBalance(""); // Clear the input
       setDepositMessage(`Successfully deposited $${depositAmount.toFixed(2)}`);
+      await triggerSnapshot();
+      window.dispatchEvent(new Event("balanceUpdated"));
+
       window.dispatchEvent(new Event("balanceUpdated"));
       fetchProfileData(); // Refresh balance on screen
     } catch (err) {
@@ -138,6 +154,8 @@ const Profile = () => {
 
       setWithdrawAmount(""); // Clear input
       setWithdrawMessage(`Successfully withdrew £${amount.toFixed(2)}`);
+      await triggerSnapshot();
+      window.dispatchEvent(new Event("balanceUpdated"));
       setBalance(newBalance); // Update UI state
       window.dispatchEvent(new Event("balanceUpdated"));
     } catch (err) {
@@ -316,9 +334,10 @@ const Profile = () => {
         onClose={closeSidebar}
         stock={selectedStock}
         mode={tradeMode}
-        onSuccess={(msg) => {
+        onSuccess={async (msg) => {
           console.log(msg);
           setSuccessMessage(msg);
+          await triggerSnapshot();
           fetchProfileData();
           window.dispatchEvent(new Event("balanceUpdated")); // Triggers profile/home update
         }}
