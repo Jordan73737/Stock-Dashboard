@@ -439,36 +439,41 @@ app.post("/api/sell", authenticateToken, async (req, res) => {
 
 
 async function recordDailyUserValues() {
-  const users = await pool.query("SELECT id, balance FROM users");
+  try {
+    const users = await pool.query("SELECT id, balance FROM users");
 
-  for (const user of users.rows) {
-    const holdings = await pool.query(
-      "SELECT symbol, quantity FROM holdings WHERE user_id = $1",
-      [user.id]
-    );
+    for (const user of users.rows) {
+      const holdings = await pool.query(
+        "SELECT symbol, quantity FROM holdings WHERE user_id = $1",
+        [user.id]
+      );
 
-    let totalInvestments = 0;
+      let totalInvestments = 0;
 
-    for (const h of holdings.rows) {
-      try {
-        const quoteRes = await axios.get(
-          `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(h.symbol)}&token=${process.env.FINNHUB_API_KEY}`
-        );
-        const currentPrice = quoteRes.data.c;
-        totalInvestments += currentPrice * h.quantity;
-      } catch (err) {
-        console.warn(`Price fetch failed for ${h.symbol}: ${err.message}`);
+      for (const h of holdings.rows) {
+        try {
+          const quoteRes = await axios.get(
+            `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(h.symbol)}&token=${process.env.FINNHUB_API_KEY}`
+          );
+          const currentPrice = quoteRes.data.c;
+          totalInvestments += currentPrice * h.quantity;
+        } catch (err) {
+          console.warn(`Price fetch failed for ${h.symbol}: ${err.message}`);
+        }
       }
+
+      const totalValue = Number(user.balance) + totalInvestments;
+
+      await pool.query(
+        `INSERT INTO User_Value_History (user_id, balance, investments, total_value)
+        VALUES ($1, $2, $3, $4)`,
+        [user.id, user.balance, totalInvestments, totalValue]
+      );
     }
-
-    const totalValue = Number(user.balance) + totalInvestments;
-
-    await pool.query(
-      `INSERT INTO User_Value_History (user_id, balance, investments, total_value)
-       VALUES ($1, $2, $3, $4)`,
-      [user.id, user.balance, totalInvestments, totalValue]
-    );
+  } catch (err) {
+    console.error("Error in recordDailyUserValues:", err);
   }
+
 }
 // ---------------------- Daily Value Calculations Route---------------------- //
 
