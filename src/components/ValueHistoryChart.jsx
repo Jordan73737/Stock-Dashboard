@@ -18,7 +18,7 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
       try {
         const token = localStorage.getItem('token');
         const res = await axios.get(
-          `/api/user-history?filter=${filter}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/user-history?filter=${filter}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
