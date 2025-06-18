@@ -26,10 +26,10 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
           }
         );
         console.log("Raw value history data:", res.data);
-        // Validate the response before mapping
+
         if (!Array.isArray(res.data)) {
           console.warn("Expected array but got:", res.data);
-          setData([]); // fallback to empty chart
+          setData([]);
           return;
         }
 
@@ -44,9 +44,18 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
       }
     };
 
+    fetchHistory(); // the intial load
 
-    fetchHistory();
+    // Re-fetch when balance is updated
+    const handleUpdate = () => fetchHistory();
+    window.addEventListener("balanceUpdated", handleUpdate);
+
+    return () => {
+      window.removeEventListener("balanceUpdated", handleUpdate);
+    };
   }, [filter]);
+
+
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">

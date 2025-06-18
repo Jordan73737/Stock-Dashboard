@@ -343,6 +343,7 @@ app.post("/api/balance", authenticateToken, async (req, res) => {
       balance,
       req.user.id,
     ]);
+    await recordSnapshotForUser(req.user.id);
     res.json({ message: "Balance updated" });
   } catch (err) {
     res.status(500).json({ error: "Failed to set balance" });
@@ -428,6 +429,8 @@ app.post("/api/sell", authenticateToken, async (req, res) => {
       req.user.id,
     ]);
 
+    await recordSnapshotForUser(req.user.id);
+
     res.json({ message: "Stock sold", proceeds });
   } catch (err) {
     console.error(err);
@@ -474,6 +477,41 @@ async function recordDailyUserValues() {
   }
 
 }
+
+// ---------------------- Value Re-Calculations Based On Deposit/Withdraw/Sell ---------------------- //
+
+
+async function recordSnapshotForUser(userId) {
+  const userRes = await pool.query("SELECT id, balance FROM users WHERE id = $1", [userId]);
+  const user = userRes.rows[0];
+
+  const holdings = await pool.query(
+    "SELECT symbol, quantity FROM holdings WHERE user_id = $1",
+    [userId]
+  );
+
+  let totalInvestments = 0;
+  for (const h of holdings.rows) {
+    try {
+      const quoteRes = await axios.get(
+        `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(h.symbol)}&token=${process.env.FINNHUB_API_KEY}`
+      );
+      const currentPrice = quoteRes.data.c;
+      totalInvestments += currentPrice * h.quantity;
+    } catch (err) {
+      console.warn(`Price fetch failed for ${h.symbol}: ${err.message}`);
+    }
+  }
+
+  const totalValue = Number(user.balance) + totalInvestments;
+
+  await pool.query(
+    `INSERT INTO User_Value_History (user_id, balance, investments, total_value)
+     VALUES ($1, $2, $3, $4)`,
+    [user.id, user.balance, totalInvestments, totalValue]
+  );
+}
+
 // ---------------------- Daily Value Calculations Route---------------------- //
 
 app.post("/api/run-daily-snapshot", async (req, res) => {
