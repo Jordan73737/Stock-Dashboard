@@ -26,7 +26,13 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
           }
         );
 
-        // Format date for display
+        // Validate the response before mapping
+        if (!Array.isArray(res.data)) {
+          console.warn("Expected array but got:", res.data);
+          setData([]); // fallback to empty chart
+          return;
+        }
+
         const formatted = res.data.map((entry) => ({
           ...entry,
           date: new Date(entry.date).toLocaleDateString(),
@@ -37,6 +43,7 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
         console.error('Failed to load value history:', err);
       }
     };
+
 
     fetchHistory();
   }, [filter]);

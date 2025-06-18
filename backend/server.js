@@ -498,7 +498,7 @@ app.get("/api/user-history", authenticateToken, async (req, res) => {
      ORDER BY date`,
     [req.user.id]
   );
-
+  console.log("User history response:", result.rows);
   res.json(result.rows);
 });
 
