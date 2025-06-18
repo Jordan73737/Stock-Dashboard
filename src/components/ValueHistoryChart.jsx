@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import axios from 'axios';
+import dayjs from "dayjs";
 
 const ValueHistoryChart = ({ filter = 'daily' }) => {
   const [data, setData] = useState([]);
@@ -35,8 +36,10 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
 
         const formatted = res.data.map((entry) => ({
           ...entry,
-          date: new Date(entry.date).toLocaleDateString(),
+          date: new Date(entry.date), 
+          total_value: Number(entry.total_value || entry.avg_value), 
         }));
+
 
         setData(formatted);
       } catch (err) {
@@ -44,7 +47,7 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
       }
     };
 
-    fetchHistory(); // the intial load
+    fetchHistory(); 
 
     // Re-fetch when balance is updated
     const handleUpdate = () => fetchHistory();
@@ -62,9 +65,9 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
       <h2 className="text-lg font-bold mb-4">Portfolio Value History</h2>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <Line type="monotone" dataKey="avg_value" stroke="#8884d8" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="total_value" stroke="#8884d8" strokeWidth={2} dot={false} />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-          <XAxis dataKey="date" />
+          <XAxis   dataKey="date" tickFormatter={(tick) => dayjs(tick).format("DD/MM/YYYY HH:mm")}minTickGap={20}/>
           <YAxis domain={['auto', 'auto']} />
           <Tooltip />
         </LineChart>
