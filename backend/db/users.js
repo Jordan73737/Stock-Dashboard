@@ -13,7 +13,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// This function fetches a user from the database by their email address
+// function that fetches a user from the database by their email address
 async function getUserByEmail(email) {
   // SQL query to select the user where email matches the parameter
   // Basically telling SQL - Run this and wherever you see the $1 placeholder value, put in the email (safely - prevents SQL injection)
@@ -23,7 +23,7 @@ async function getUserByEmail(email) {
   return result.rows[0];
 }
 
-// This function updates the user's password in the database
+// function to update the user's password in the database
 async function updateUserPassword(email, newPassword) {
   // Hash the new password with 10 salt rounds for security
   const hashed = await bcrypt.hash(newPassword, 10);
