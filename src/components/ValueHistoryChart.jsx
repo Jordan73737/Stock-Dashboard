@@ -40,7 +40,11 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
           total_value: Number(entry.total_value || entry.avg_value), 
         }));
 
-
+        console.log("Formatted:", formatted.map(d => ({
+          ...d,
+          valueType: typeof d.total_value,
+          isNaN: isNaN(d.total_value),
+        })));
         setData(formatted);
       } catch (err) {
         console.error('Failed to load value history:', err);
@@ -65,10 +69,10 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
       <h2 className="text-lg font-bold mb-4">Portfolio Value History</h2>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <Line type="monotone" dataKey="total_value" stroke="#8884d8" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="total_value" stroke="#8884d8" strokeWidth={2} dot={true} />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis   dataKey="date" tickFormatter={(tick) => dayjs(tick).format("DD/MM/YYYY HH:mm")}minTickGap={20}/>
-          <YAxis domain={['auto', 'auto']} />
+          <YAxis domain={[0, 'auto']} />
           <Tooltip />
         </LineChart>
       </ResponsiveContainer>
