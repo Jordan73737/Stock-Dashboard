@@ -338,7 +338,7 @@ app.get("/api/popular-stocks", async (req, res) => {
 
 // ---------------------- BALANCE & HOLDINGS ---------------------- //
 
-// Set fake balance
+// Set balance
 app.post("/api/balance", authenticateToken, async (req, res) => {
   const { balance } = req.body;
   try {
@@ -529,6 +529,7 @@ app.post("/api/run-daily-snapshot", async (req, res) => {
 
 
 app.get("/api/user-history", authenticateToken, async (req, res) => {
+   try {
   const result = await pool.query(
     `SELECT recorded_at as date, total_value
      FROM User_Value_History
@@ -537,6 +538,9 @@ app.get("/api/user-history", authenticateToken, async (req, res) => {
     [req.user.id]
   );
   res.json(result.rows);
+   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 
