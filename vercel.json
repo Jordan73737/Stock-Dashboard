@@ -1,3 +1,8 @@
+// Tells Vercel to serve index.html for all routes 
+
+// Without this - refreshing a non-root page would 404 in production.
+
+// Needed for CSR to work properly
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }

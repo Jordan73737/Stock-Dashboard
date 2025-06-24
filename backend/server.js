@@ -86,7 +86,8 @@ app.post("/api/register", async (req, res) => {
       "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
       [email, hashedPassword]
     );
-
+    // Sets users ValueHistoryChart to have a default 0 value in there so the graph starts with 0 upon account creation
+    // Then when they deposit their first mock money the chart will update with a line and new plot point
     const initialHistoryZero = await pool.query(
        `INSERT INTO User_Value_History (user_id, balance, investments, total_value)
         VALUES ($1, $2, $3, $4)`,

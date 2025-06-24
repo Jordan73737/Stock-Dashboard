@@ -69,7 +69,7 @@ const ValueHistoryChart = ({ filter = 'daily' }) => {
       <h2 className="text-lg font-bold mb-4">Portfolio Value History</h2>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <Line type="monotone" dataKey="total_value" stroke="#8884d8" strokeWidth={2} dot={true} />
+          <Line type="monotone" dataKey="Value:" stroke="#8884d8" strokeWidth={2} dot={true} />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis   dataKey="date" tickFormatter={(tick) => dayjs(tick).format("DD/MM/YYYY HH:mm")}minTickGap={20}/>
           <YAxis domain={[0, 'auto']} />
