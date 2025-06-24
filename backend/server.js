@@ -87,6 +87,13 @@ app.post("/api/register", async (req, res) => {
       [email, hashedPassword]
     );
 
+    const initialHistoryZero = await pool.query(
+       `INSERT INTO User_Value_History (user_id, balance, investments, total_value)
+        VALUES ($1, $2, $3, $4)`,
+        [result.rows[0].id, 0, 0, 0]
+    );
+   
+
     const token = jwt.sign({ id: result.rows[0].id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
