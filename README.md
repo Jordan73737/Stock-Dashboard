@@ -1,12 +1,38 @@
-# React + Vite
+# Stock Dashboard Simulation App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a full-stack web application designed for simulating a stock investment platform. Built as part of my L4 Software Developer apprenticeship project!
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User registration and secure login (JWT & bcrypt)
+- Password reset via SendGrid email verification
+- View real-time stock data from Finnhub API
+- Simulate buying/selling stocks with a mock balance
+- Use the search bar to find and stocks
+- Track your stock favourites and overall portfolio performance
+- Daily value snapshot plots to monitor long-term progress
+- Persistent Redux state and error handling
+- Fully responsive UI styled with Tailwind CSS
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Frontend:** React, Redux Toolkit, Vite, Tailwind CSS, Axios
+- **Backend:** Node.js, Express, PostgreSQL, bcrypt, JWT
+- **APIs:** Finnhub (for real-time stock data), SendGrid (email)
+- **Deployment:** Frontend hosted on Vercel, backend logic and database on Render
+- **Containerisation:** Docker used for local dev and testing
+- **Version Control:** Git with feature branches, PRs, and commit history
+
+## Documentation
+
+The following Word documents are included for full technical and apprenticeship-based documentation:
+
+- `Stock Dashboard Project AM1.docx`: Main project report
+- `Mapping Document & Appendix.docx`: KSB mapping, figures, diagrams, and supplementary materials
+
+These documents cover how I went through the full Software Development Lifecycle (SDLC) during the creation of this project. Covering planning, feasibility analysis, design choices, setup, testing, debugging, deployment, maintenance and how the project maps to the apprenticeship standard.
+
+## Deployment Links
+
+- **Frontend:** https://stock-dashboard-drab.vercel.app/home
+- **Codebase:** https://github.com/Jordan73737
